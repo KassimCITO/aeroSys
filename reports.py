@@ -218,7 +218,10 @@ def report_pilotos():
     
     # Consulta con filtros
     query = Piloto.query
-    # Nota: El modelo Piloto no tiene campos tipo_licencia ni nacionalidad
+    if tipo_licencia:
+        query = query.filter(Piloto.tipo_licencia.ilike(f'%{tipo_licencia}%'))
+    if nacionalidad:
+        query = query.filter(Piloto.nacionalidad.ilike(f'%{nacionalidad}%'))
     
     pilotos = query.all()
     
@@ -228,9 +231,9 @@ def report_pilotos():
         data.append([
             p.nombre,
             p.licencia,
-            'N/A',  # El modelo Piloto no tiene campo tipo_licencia
+            p.tipo_licencia or 'N/A',
             str(p.horas_vuelo) if p.horas_vuelo else '0',
-            'N/A'   # El modelo Piloto no tiene campo nacionalidad
+            p.nacionalidad or 'N/A'
         ])
     
     headers = ['Nombre', 'Licencia', 'Tipo Licencia', 'Horas Vuelo', 'Nacionalidad']
@@ -446,13 +449,12 @@ def filtros_aeronaves():
 def filtros_pilotos():
     """Muestra formulario de filtros para reporte de pilotos"""
     # Obtener opciones únicas para los filtros
-    # Nota: El modelo Piloto no tiene campos tipo_licencia ni nacionalidad
-    tipos_licencia = []
-    nacionalidades = []
+    tipos_licencia = db.session.query(Piloto.tipo_licencia).distinct().filter(Piloto.tipo_licencia.isnot(None)).all()
+    nacionalidades = db.session.query(Piloto.nacionalidad).distinct().filter(Piloto.nacionalidad.isnot(None)).all()
     
     return render_template('reports/filtros_pilotos.html',
-                         tipos_licencia=tipos_licencia,
-                         nacionalidades=nacionalidades)
+                         tipos_licencia=[t[0] for t in tipos_licencia],
+                         nacionalidades=[n[0] for n in nacionalidades])
 
 @reports_bp.route('/filtros/vuelos')
 @login_required

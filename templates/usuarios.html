@@ -82,8 +82,27 @@ function showMessage(message, type) {
     var alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
     alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h3').nextSibling);
-    setTimeout(function() { alertDiv.remove(); }, 5000);
+    
+    // Buscar un contenedor válido para insertar el mensaje
+    var container = document.querySelector('.container');
+    var h3 = document.querySelector('h3');
+    
+    if (container && h3) {
+        // Insertar después del h3
+        container.insertBefore(alertDiv, h3.nextSibling);
+    } else if (container) {
+        // Si no hay h3, insertar al principio del contenedor
+        container.insertBefore(alertDiv, container.firstChild);
+    } else {
+        // Fallback: insertar al principio del body
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+    }
+    
+    setTimeout(function() { 
+        if (alertDiv.parentNode) {
+            alertDiv.remove(); 
+        }
+    }, 5000);
 }
 
 function validateForm() {

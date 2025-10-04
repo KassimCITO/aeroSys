@@ -19,7 +19,7 @@ login_manager.login_view = 'auth.login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Usuario.query.get(int(user_id))
+    return db.session.get(Usuario, int(user_id))
 
 # Importar y registrar blueprints después de crear app
 from routes import main_bp, config_bp

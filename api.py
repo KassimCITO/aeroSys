@@ -116,16 +116,17 @@ def pilotos():
             'piloto_id': p.piloto_id,
             'nombre': p.nombre,
             'licencia': p.licencia,
-            # Campos no existentes en el modelo, devueltos para compatibilidad del frontend
-            'tipo_licencia': None,
+            'tipo_licencia': p.tipo_licencia,
             'horas_vuelo': p.horas_vuelo,
-            'nacionalidad': None
+            'nacionalidad': p.nacionalidad
         } for p in items])
     data = request.json or {}
     p = Piloto(
         nombre=data.get('nombre'),
         licencia=data.get('licencia'),
-        horas_vuelo=data.get('horas_vuelo', 0)
+        tipo_licencia=data.get('tipo_licencia'),
+        horas_vuelo=data.get('horas_vuelo', 0),
+        nacionalidad=data.get('nacionalidad')
     )
     db.session.add(p)
     db.session.commit()

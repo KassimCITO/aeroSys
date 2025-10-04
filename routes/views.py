@@ -35,11 +35,9 @@ def page_pilotos():
 def page_vuelos():
     pilotos = Piloto.query.all()
     if request.method == 'POST':
-        # ...existing code...
-        copiloto_id = request.form.get('copiloto_id')
-        if copiloto_id:  # Solo asignar si se seleccionó un copiloto
-            vuelo.copiloto_id = copiloto_id
-        # ...existing code...
+        # This is just a view function, actual flight creation is handled by API
+        # The copiloto assignment logic should be in the API endpoint
+        pass
     return render_template('vuelos.html', pilotos=pilotos)
 
 @main_bp.route('/admin/confirmaciones')
