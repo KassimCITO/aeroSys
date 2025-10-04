@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}Confirmaciones{% endblock %}
+{% block content %}
+<div class="container">
+    <h3 class="my-4">Gestión de Confirmaciones</h3>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-primary" onclick="showCreate()">Agregar Confirmación</button>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportarPDF()">
+                <i class="fas fa-file-pdf"></i> Exportar a PDF
+            </button>
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Filtros para Reporte</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="filtro_estado" class="form-label">Estado</label>
+                    <select id="filtro_estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filtro_vuelo" class="form-label">Vuelo</label>
+                    <select id="filtro_vuelo" class="form-select">
+                        <option value="">Todos los vuelos</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-primary" onclick="aplicarFiltros()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="formArea" style="display:none;" class="mb-3 card p-3">
+        <h5 id="formTitle" class="mb-3">Nueva Confirmación</h5>
+        <form id="confirmacionForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="id_vuelo" class="form-label">Vuelo *</label>
+                        <select id="id_vuelo" class="form-select" required>
+                            <option value="">Seleccione un vuelo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select id="estado" class="form-select">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="nombre_pasajero" class="form-label">Nombre del Pasajero *</label>
+                        <input id="nombre_pasajero" class="form-control" required maxlength="100" placeholder="Ej: Juan Pérez">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="documento_identidad" class="form-label">Documento de Identidad *</label>
+                        <input id="documento_identidad" class="form-control" required maxlength="50" placeholder="Ej: 12345678">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="asiento" class="form-label">Número de Asiento</label>
+                        <input id="asiento" class="form-control" maxlength="10" placeholder="Ej: 12A">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" onclick="saveConfirmacion()">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="listArea" class="table-responsive">
+        <table class="table table-hover" id="tblC">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Vuelo</th>
+                    <th>Pasajero</th>
+                    <th>Documento</th>
+                    <th>Asiento</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+var vuelos = [];
+
+function showMessage(message, type) {
+    type = type || 'success';
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h3').nextSibling);
+    setTimeout(function() { alertDiv.remove(); }, 5000);
+}
+
+function validateForm() {
+    var form = document.getElementById('confirmacionForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+function resetForm() {
+    var form = document.getElementById('confirmacionForm');
+    form.reset();
+    form.classList.remove('was-validated');
+}
+
+function loadVuelos() {
+    fetch('/api/vuelos')
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar vuelos');
+            return response.json();
+        })
+        .then(function(data) {
+            vuelos = data;
+            var select = document.getElementById('id_vuelo');
+            select.innerHTML = '<option value="">Seleccione un vuelo</option>';
+            data.forEach(function(v) {
+                var option = document.createElement('option');
+                option.value = v.id_vuelo;
+                option.textContent = v.codigo_vuelo + ' - ' + v.origen + ' a ' + v.destino;
+                select.appendChild(option);
+            });
+        })
+        .catch(function(error) {
+            showMessage('Error al cargar vuelos: ' + error.message, 'danger');
+        });
+}
+
+function fetchConfirmaciones() {
+    fetch('/api/confirmaciones')
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar confirmaciones');
+            return response.json();
+        })
+        .then(function(data) {
+            var tbody = document.querySelector('#tblC tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(function(r) {
+                var tr = document.createElement('tr');
+                var vuelo = vuelos.find(function(v) { return v.id_vuelo === r.id_vuelo; });
+                
+                tr.innerHTML = '<td>' + r.id_confirmacion + '</td>' +
+                              '<td>' + (vuelo ? vuelo.codigo_vuelo : r.id_vuelo) + '</td>' +
+                              '<td>' + r.nombre_pasajero + '</td>' +
+                              '<td>' + r.documento_identidad + '</td>' +
+                              '<td>' + (r.asiento || '-') + '</td>' +
+                              '<td><span class="badge bg-' + getEstadoColor(r.estado) + '">' + r.estado + '</span></td>' +
+                              '<td>' +
+                              '<button class="btn btn-sm btn-warning" onclick="editC(' + r.id_confirmacion + ')">Editar</button> ' +
+                              '<button class="btn btn-sm btn-danger" onclick="delC(' + r.id_confirmacion + ')">Eliminar</button>' +
+                              '</td>';
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'danger');
+        });
+}
+
+function getEstadoColor(estado) {
+    var colores = {
+        'Pendiente': 'warning',
+        'Confirmado': 'success',
+        'Cancelado': 'danger'
+    };
+    return colores[estado] || 'secondary';
+}
+
+function saveConfirmacion() {
+    if (!validateForm()) return;
+
+    var payload = {
+        id_vuelo: parseInt(document.getElementById('id_vuelo').value),
+        nombre_pasajero: document.getElementById('nombre_pasajero').value,
+        documento_identidad: document.getElementById('documento_identidad').value,
+        asiento: document.getElementById('asiento').value,
+        estado: document.getElementById('estado').value
+    };
+    
+    fetch('/api/confirmaciones', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        if (!response.ok) throw new Error('Error al guardar la confirmación');
+        showMessage('Confirmación guardada exitosamente');
+        hideForm();
+        fetchConfirmaciones();
+    })
+    .catch(function(error) {
+        showMessage(error.message, 'danger');
+    });
+}
+
+function editC(id) {
+    fetch('/api/confirmaciones/' + id)
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar la confirmación');
+            return response.json();
+        })
+        .then(function(data) {
+            document.getElementById('id_vuelo').value = data.id_vuelo;
+            document.getElementById('nombre_pasajero').value = data.nombre_pasajero;
+            document.getElementById('documento_identidad').value = data.documento_identidad;
+            document.getElementById('asiento').value = data.asiento || '';
+            document.getElementById('estado').value = data.estado || 'Pendiente';
+            
+            document.getElementById('formTitle').textContent = 'Editar Confirmación (ID ' + id + ')';
+            document.getElementById('formArea').style.display = 'block';
+            
+            document.querySelector('#formArea button.btn-success').onclick = function() {
+                if (!validateForm()) return;
+                
+                var payload = {
+                    id_vuelo: parseInt(document.getElementById('id_vuelo').value),
+                    nombre_pasajero: document.getElementById('nombre_pasajero').value,
+                    documento_identidad: document.getElementById('documento_identidad').value,
+                    asiento: document.getElementById('asiento').value,
+                    estado: document.getElementById('estado').value
+                };
+                
+                fetch('/api/confirmaciones/' + id, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Error al actualizar la confirmación');
+                    showMessage('Confirmación actualizada exitosamente');
+                    hideForm();
+                    fetchConfirmaciones();
+                })
+                .catch(function(error) {
+                    showMessage(error.message, 'danger');
+                });
+            };
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'danger');
+        });
+}
+
+function delC(id) {
+    if (!confirm('¿Está seguro que desea eliminar la confirmación #' + id + '?')) return;
+    
+    fetch('/api/confirmaciones/' + id, {method: 'DELETE'})
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al eliminar la confirmación');
+            showMessage('Confirmación eliminada exitosamente');
+            fetchConfirmaciones();
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'danger');
+        });
+}
+
+function showCreate() {
+    resetForm();
+    document.getElementById('formTitle').textContent = 'Nueva Confirmación';
+    document.getElementById('formArea').style.display = 'block';
+    document.querySelector('#formArea button.btn-success').onclick = saveConfirmacion;
+}
+
+function hideForm() {
+    resetForm();
+    document.getElementById('formArea').style.display = 'none';
+}
+
+function init() {
+    loadVuelos();
+    fetchConfirmaciones();
+}
+
+// Funciones para filtros y exportación
+function aplicarFiltros() {
+    var estado = document.getElementById('filtro_estado').value;
+    var vuelo_id = document.getElementById('filtro_vuelo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/confirmaciones?';
+    var params = [];
+    if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (vuelo_id) params.push('vuelo_id=' + encodeURIComponent(vuelo_id));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Abrir reporte en nueva ventana
+    window.open(url, '_blank');
+}
+
+function exportarPDF() {
+    var estado = document.getElementById('filtro_estado').value;
+    var vuelo_id = document.getElementById('filtro_vuelo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/confirmaciones?';
+    var params = [];
+    if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (vuelo_id) params.push('vuelo_id=' + encodeURIComponent(vuelo_id));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Descargar PDF
+    window.location.href = url;
+}
+
+function exportarExcel() {
+    var estado = document.getElementById('filtro_estado').value;
+    var vuelo_id = document.getElementById('filtro_vuelo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/confirmaciones?formato=excel';
+    var params = [];
+    if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (vuelo_id) params.push('vuelo_id=' + encodeURIComponent(vuelo_id));
+    
+    if (params.length > 0) {
+        url += '&' + params.join('&');
+    }
+    
+    // Descargar Excel
+    window.location.href = url;
+}
+
+// Cargar vuelos para el filtro
+function loadVuelosForFilter() {
+    fetch('/api/vuelos')
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar vuelos');
+            return response.json();
+        })
+        .then(function(data) {
+            var select = document.getElementById('filtro_vuelo');
+            select.innerHTML = '<option value="">Todos los vuelos</option>';
+            data.forEach(function(v) {
+                var option = document.createElement('option');
+                option.value = v.id_vuelo;
+                option.textContent = v.codigo_vuelo + ' - ' + v.origen + ' a ' + v.destino;
+                select.appendChild(option);
+            });
+        })
+        .catch(function(error) {
+            console.error('Error al cargar vuelos para filtro:', error);
+        });
+}
+
+// Inicializar cuando se carga la página
+init();
+loadVuelosForFilter();
+</script>
+{% endblock %}

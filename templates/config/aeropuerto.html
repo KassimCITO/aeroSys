@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Configuración del Aeropuerto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h3 class="my-4">Configuración del Aeropuerto</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <!-- Información General -->
+                <h5 class="mb-3">Información General</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre" class="form-label">Nombre del Aeropuerto *</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" 
+                               value="{{ config.nombre }}" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="codigo_iata" class="form-label">Código IATA</label>
+                        <input type="text" class="form-control" id="codigo_iata" name="codigo_iata" 
+                               value="{{ config.codigo_iata }}" maxlength="3">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="codigo_icao" class="form-label">Código ICAO</label>
+                        <input type="text" class="form-control" id="codigo_icao" name="codigo_icao" 
+                               value="{{ config.codigo_icao }}" maxlength="4">
+                    </div>
+                </div>
+
+                <!-- Dirección -->
+                <h5 class="mb-3 mt-4">Dirección</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" name="direccion" 
+                               value="{{ config.direccion }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="codigo_postal" class="form-label">Código Postal</label>
+                        <input type="text" class="form-control" id="codigo_postal" name="codigo_postal" 
+                               value="{{ config.codigo_postal }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="municipio" class="form-label">Municipio</label>
+                        <input type="text" class="form-control" id="municipio" name="municipio" 
+                               value="{{ config.municipio }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="ciudad" class="form-label">Ciudad</label>
+                        <input type="text" class="form-control" id="ciudad" name="ciudad" 
+                               value="{{ config.ciudad }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <input type="text" class="form-control" id="estado" name="estado" 
+                               value="{{ config.estado }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="pais" class="form-label">País</label>
+                        <input type="text" class="form-control" id="pais" name="pais" 
+                               value="{{ config.pais }}">
+                    </div>
+                </div>
+
+                <!-- Contacto -->
+                <h5 class="mb-3 mt-4">Contacto</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="director" class="form-label">Director</label>
+                        <input type="text" class="form-control" id="director" name="director" 
+                               value="{{ config.director }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="telefono" name="telefono" 
+                               value="{{ config.telefono }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ config.email }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sitio_web" class="form-label">Sitio Web</label>
+                        <input type="url" class="form-control" id="sitio_web" name="sitio_web" 
+                               value="{{ config.sitio_web }}">
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

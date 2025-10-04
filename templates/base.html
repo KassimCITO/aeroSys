@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Aeropuertos{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% block head %}{% endblock %}
+
+    <style>
+        /* Layout principal con footer fijo */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        /* Footer fijo en la parte inferior */
+        .footer-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: #212529;
+            color: #ffffff;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ajustar el contenido para que no se oculte detrás del footer */
+        .main-content {
+            padding-bottom: 60px; /* Altura del footer + margen */
+        }
+
+        /* Estilos para el switch de tema */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .theme-switch {
+            position: relative;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "☀️";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            content: "🌙";
+        }
+
+        /* Estilos para modo oscuro */
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #1e2124;
+            --bs-body-color: #d1d5db;
+            --bs-navbar-color: rgba(255, 255, 255, 0.9);
+            --bs-card-bg: #2a2d31;
+            --bs-card-border-color: #3a3f44;
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: #17191c !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-bs-theme="dark"] .card {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-bs-theme="dark"] .btn-light {
+            background-color: #3a3f44;
+            border-color: #4a4f54;
+            color: #d1d5db;
+        }
+
+        [data-bs-theme="dark"] .btn-light:hover {
+            background-color: #4a4f54;
+            border-color: #5a5f64;
+            color: #ffffff;
+        }
+
+        [data-bs-theme="dark"] .footer-fixed {
+            background-color: #0d1117;
+            border-top: 1px solid #30363d;
+        }
+
+        /* Transiciones suaves */
+        body, .card, .navbar, .btn {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-bottom: 80px; /* Más espacio en móviles */
+            }
+            
+            .footer-fixed {
+                padding: 12px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
+                <i class="fas fa-plane-departure"></i> Aeropuertos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.page_aeronaves') }}">Aeronaves</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.page_pilotos') }}">Pilotos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.page_vuelos') }}">Vuelos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('reports.reports_index') }}">Reportes</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                {% if current_user.is_authenticated %}
+                <div class="d-flex align-items-center">
+                    {% if current_user.rol == 'admin' %}
+                    <a href="{{ url_for('config.configuracion_aeropuerto') }}" 
+                       class="btn btn-light me-2"
+                       title="Configuración del Aeropuerto">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    {% endif %}
+                    
+                    <div class="theme-switch-wrapper">
+                        <label class="theme-switch mb-0">
+                            <input type="checkbox" id="themeSwitch">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <span class="text-white me-2">{{ current_user.username }}</span>
+                    <a class="btn btn-outline-light" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<!-- StatusBar Footer Fijo -->
+<footer class="footer-fixed">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-12 text-center">
+                <small id="statusbar-info">
+                    <i class="fas fa-plane-departure me-2"></i>
+                    <span id="aeropuerto-nombre">Cargando...</span> | 
+                    <span id="aeropuerto-ciudad">Cargando...</span>, 
+                    <span id="aeropuerto-municipio">Cargando...</span>, 
+                    <span id="aeropuerto-estado">Cargando...</span>, 
+                    <span id="aeropuerto-pais">Cargando...</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const themeSwitch = document.getElementById('themeSwitch');
+    const html = document.documentElement;
+    
+    // Verificar tema guardado
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-bs-theme', savedTheme);
+    themeSwitch.checked = savedTheme === 'dark';
+    
+    themeSwitch.addEventListener('change', () => {
+        // Prevenir múltiples clics
+        themeSwitch.disabled = true;
+        
+        const newTheme = themeSwitch.checked ? 'dark' : 'light';
+        html.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Habilitar el switch después de la transición
+        setTimeout(() => {
+            themeSwitch.disabled = false;
+        }, 500);
+    });
+    
+    // Cargar datos de configuración del aeropuerto
+    loadAirportConfig();
+});
+
+function loadAirportConfig() {
+    fetch('/api/configuracion-aeropuerto')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('aeropuerto-nombre').textContent = data.nombre || 'Aeropuerto';
+            document.getElementById('aeropuerto-ciudad').textContent = data.ciudad || 'Ciudad';
+            document.getElementById('aeropuerto-municipio').textContent = data.municipio || 'Municipio';
+            document.getElementById('aeropuerto-estado').textContent = data.estado || 'Estado';
+            document.getElementById('aeropuerto-pais').textContent = data.pais || 'País';
+        })
+        .catch(error => {
+            console.error('Error al cargar configuración del aeropuerto:', error);
+            // Valores por defecto en caso de error
+            document.getElementById('aeropuerto-nombre').textContent = 'Aeropuerto';
+            document.getElementById('aeropuerto-ciudad').textContent = 'Ciudad';
+            document.getElementById('aeropuerto-municipio').textContent = 'Municipio';
+            document.getElementById('aeropuerto-estado').textContent = 'Estado';
+            document.getElementById('aeropuerto-pais').textContent = 'México';
+        });
+}
+</script>
+</body>
+</html>

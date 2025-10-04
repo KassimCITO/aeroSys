@@ -14,6 +14,7 @@ class Aeronave(db.Model):
     fabricante = db.Column(db.String(100))
     capacidad = db.Column(db.Integer)
     tipo_aeronave = db.Column(db.String(50))
+    imagen = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Relación con vuelos
     vuelos = db.relationship('Vuelo', back_populates='aeronave')
@@ -24,7 +25,9 @@ class Piloto(db.Model):
     piloto_id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     licencia = db.Column(db.String(20), unique=True, nullable=False)
+    tipo_licencia = db.Column(db.String(20))
     horas_vuelo = db.Column(db.Integer)
+    nacionalidad = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Relaciones con vuelos
     vuelos_piloto = db.relationship('Vuelo', back_populates='piloto', foreign_keys='Vuelo.piloto_id')
@@ -42,8 +45,9 @@ class Vuelo(db.Model):
     aeronave_id = db.Column(db.Integer, db.ForeignKey('Aeronaves.aeronave_id'), nullable=False)
     piloto_id = db.Column(db.Integer, db.ForeignKey('Pilotos.piloto_id'), nullable=False)
     copiloto_id = db.Column(db.Integer, db.ForeignKey('Pilotos.piloto_id'))
+    observaciones = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relaciones
     aeronave = db.relationship('Aeronave', back_populates='vuelos')
     piloto = db.relationship('Piloto', back_populates='vuelos_piloto', foreign_keys=[piloto_id])

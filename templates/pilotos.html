@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block title %}Pilotos{% endblock %}
+{% block content %}
+<div class="container">
+    <h3 class="my-4">Gestión de Pilotos</h3>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-primary" onclick="showCreate()">Agregar Piloto</button>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportarPDF()">
+                <i class="fas fa-file-pdf"></i> Exportar a PDF
+            </button>
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Filtros para Reporte</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="filtro_tipo_licencia" class="form-label">Tipo de Licencia</label>
+                    <select id="filtro_tipo_licencia" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="PPL">PPL - Piloto Privado</option>
+                        <option value="CPL">CPL - Piloto Comercial</option>
+                        <option value="ATPL">ATPL - Piloto de Transporte</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filtro_nacionalidad" class="form-label">Nacionalidad</label>
+                    <input id="filtro_nacionalidad" class="form-control" placeholder="Ej: México">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-primary" onclick="aplicarFiltros()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="formArea" style="display:none;" class="mb-3 card p-3">
+        <h5 id="formTitle" class="mb-3">Nuevo Piloto</h5>
+        <form id="pilotoForm">
+            <input type="hidden" id="piloto_id" value="">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre Completo *</label>
+                <input id="nombre" class="form-control" required maxlength="100" placeholder="Ej: Juan Pérez García">
+            </div>
+            
+            <div class="mb-3">
+                <label for="licencia" class="form-label">Número de Licencia *</label>
+                <input id="licencia" class="form-control" required maxlength="50" placeholder="Ej: ATP-12345">
+            </div>
+            
+            <div class="mb-3">
+                <label for="tipo_licencia" class="form-label">Tipo de Licencia</label>
+                <select id="tipo_licencia" class="form-select">
+                    <option value="">Seleccione un tipo</option>
+                    <option value="PPL" selected>PPL - Licencia de Piloto Privado</option>
+                    <option value="CPL">CPL - Licencia de Piloto Comercial</option>
+                    <option value="ATPL">ATPL - Licencia de Piloto de Transporte de Línea Aérea</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="horas_vuelo" class="form-label">Horas de Vuelo</label>
+                <input id="horas_vuelo" type="number" class="form-control" min="0" max="99999" placeholder="Ej: 1500">
+            </div>
+            
+            <div class="mb-3">
+                <label for="nacionalidad" class="form-label">Nacionalidad</label>
+                <input id="nacionalidad" class="form-control" maxlength="50" placeholder="Ej: México" value="México">
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" onclick="savePiloto()">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="listArea" class="table-responsive">
+        <table class="table table-hover" id="tblP">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Licencia</th>
+                    <th>Tipo</th>
+                    <th>Horas vuelo</th>
+                    <th>Nacionalidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de éxito -->
+<div class="modal fade" id="saveSuccessModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-check-circle text-success me-2"></i>Operación exitosa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="saveSuccessMessage">Cambios guardados correctamente.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showMessage(message, type) {
+    type = type || 'success';
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h3').nextSibling);
+    setTimeout(function() { alertDiv.remove(); }, 5000);
+}
+
+function validateForm() {
+    var form = document.getElementById('pilotoForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+function resetForm() {
+    var form = document.getElementById('pilotoForm');
+    form.reset();
+    form.classList.remove('was-validated');
+    // Clear the piloto_id for new entries
+    document.getElementById('piloto_id').value = '';
+}
+
+function fetchPilotos() {
+    console.log('Fetching pilotos...');
+    fetch('/api/pilotos')
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar pilotos');
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('Pilotos data received:', data);
+            var tbody = document.querySelector('#tblP tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                
+                data.forEach(function(r) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td>' + r.piloto_id + '</td>' +
+                                  '<td>' + r.nombre + '</td>' +
+                                  '<td>' + r.licencia + '</td>' +
+                                  '<td>' + (r.tipo_licencia || '-') + '</td>' +
+                                  '<td>' + (r.horas_vuelo || 0) + '</td>' +
+                                  '<td>' + (r.nacionalidad || '-') + '</td>' +
+                                  '<td>' +
+                                  '<button class="btn btn-sm btn-warning" title="Editar" onclick="editP(' + r.piloto_id + ')"><i class="fas fa-edit"></i></button> ' +
+                                  '<button class="btn btn-sm btn-danger" title="Eliminar" onclick="delP(' + r.piloto_id + ')"><i class="fas fa-trash"></i></button>' +
+                                  '</td>';
+                    tbody.appendChild(tr);
+                });
+                console.log('Table updated with', data.length, 'pilotos');
+            } else {
+                console.error('Table body not found!');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching pilotos:', error);
+            showMessage(error.message, 'danger');
+        });
+}
+
+function savePiloto() {
+    if (!validateForm()) return;
+
+    var piloto_id = document.getElementById('piloto_id').value;
+    var payload = {
+        nombre: document.getElementById('nombre').value,
+        licencia: document.getElementById('licencia').value,
+        tipo_licencia: document.getElementById('tipo_licencia').value,
+        horas_vuelo: parseInt(document.getElementById('horas_vuelo').value || 0),
+        nacionalidad: document.getElementById('nacionalidad').value
+    };
+    
+    console.log('Saving piloto with payload:', payload);
+    
+    var url = piloto_id ? '/api/pilotos/' + piloto_id : '/api/pilotos';
+    var method = piloto_id ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        console.log('Save response status:', response.status);
+        if (!response.ok) throw new Error('Error al guardar el piloto');
+        return response.json();
+    })
+    .then(function(data) {
+        console.log('Save response data:', data);
+        // Hide form and refresh table immediately
+        hideForm();
+        fetchPilotos();
+        showMessage(piloto_id ? 'Piloto actualizado exitosamente' : 'Piloto guardado exitosamente', 'success');
+    })
+    .catch(function(error) {
+        console.error('Error saving piloto:', error);
+        showMessage(error.message, 'danger');
+    });
+}
+
+function editP(id) {
+    console.log('Editing piloto with id:', id);
+    fetch('/api/pilotos/' + id)
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar el piloto');
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('Edit piloto data received:', data);
+            document.getElementById('piloto_id').value = data.piloto_id;
+            document.getElementById('nombre').value = data.nombre;
+            document.getElementById('licencia').value = data.licencia;
+            document.getElementById('tipo_licencia').value = data.tipo_licencia || 'PPL';
+            document.getElementById('horas_vuelo').value = data.horas_vuelo || 0;
+            document.getElementById('nacionalidad').value = data.nacionalidad || 'México';
+            
+            document.getElementById('formTitle').textContent = 'Editar Piloto (ID ' + id + ')';
+            document.getElementById('formArea').style.display = 'block';
+            
+            // Set the button to use savePiloto function
+            document.querySelector('#formArea button.btn-success').onclick = savePiloto;
+        })
+        .catch(function(error) {
+            console.error('Error loading piloto for edit:', error);
+            showMessage(error.message, 'danger');
+        });
+}
+
+function delP(id) {
+    if (!confirm('¿Está seguro que desea eliminar el piloto #' + id + '?')) return;
+    
+    fetch('/api/pilotos/' + id, {method: 'DELETE'})
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al eliminar el piloto');
+            showMessage('Piloto eliminado exitosamente');
+            fetchPilotos();
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'danger');
+        });
+}
+
+function showForm() {
+    document.getElementById('formArea').style.display = 'block';
+}
+
+function showCreate() {
+    resetForm();
+    document.getElementById('formTitle').textContent = 'Nuevo Piloto';
+    document.getElementById('formArea').style.display = 'block';
+    document.querySelector('#formArea button.btn-success').onclick = savePiloto;
+    // Defaults
+    var tipo = document.getElementById('tipo_licencia');
+    if (tipo) tipo.value = 'PPL';
+    var nac = document.getElementById('nacionalidad');
+    if (nac) nac.value = 'México';
+}
+
+function hideForm() {
+    resetForm();
+    document.getElementById('formArea').style.display = 'none';
+}
+
+// Funciones para filtros y exportación
+function aplicarFiltros() {
+    var tipo_licencia = document.getElementById('filtro_tipo_licencia').value;
+    var nacionalidad = document.getElementById('filtro_nacionalidad').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/pilotos?';
+    var params = [];
+    if (tipo_licencia) params.push('tipo_licencia=' + encodeURIComponent(tipo_licencia));
+    if (nacionalidad) params.push('nacionalidad=' + encodeURIComponent(nacionalidad));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Abrir reporte en nueva ventana
+    window.open(url, '_blank');
+}
+
+function exportarPDF() {
+    var tipo_licencia = document.getElementById('filtro_tipo_licencia').value;
+    var nacionalidad = document.getElementById('filtro_nacionalidad').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/pilotos?';
+    var params = [];
+    if (tipo_licencia) params.push('tipo_licencia=' + encodeURIComponent(tipo_licencia));
+    if (nacionalidad) params.push('nacionalidad=' + encodeURIComponent(nacionalidad));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Descargar PDF
+    window.location.href = url;
+}
+
+function exportarExcel() {
+    var tipo_licencia = document.getElementById('filtro_tipo_licencia').value;
+    var nacionalidad = document.getElementById('filtro_nacionalidad').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/pilotos?formato=excel';
+    var params = [];
+    if (tipo_licencia) params.push('tipo_licencia=' + encodeURIComponent(tipo_licencia));
+    if (nacionalidad) params.push('nacionalidad=' + encodeURIComponent(nacionalidad));
+    
+    if (params.length > 0) {
+        url += '&' + params.join('&');
+    }
+    
+    // Descargar Excel
+    window.location.href = url;
+}
+
+// Inicialización
+fetchPilotos();
+</script>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes - Aeropuertos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-bar"></i> Reportes del Sistema</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Reporte de Aeronaves -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-gradient rounded-circle p-3 me-3">
+                        <i class="fas fa-plane text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Aeronaves</h5>
+                        <small class="text-muted">Reporte de flota aérea</small>
+                    </div>
+                </div>
+                <p class="card-text">Genera reportes detallados de todas las aeronaves registradas en el sistema, con opciones de filtrado por fabricante y tipo.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('reports.filtros_aeronaves') }}" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Configurar Filtros
+                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('reports.report_aeronaves', formato='pdf') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ url_for('reports.report_aeronaves', formato='excel') }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte de Pilotos -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-gradient rounded-circle p-3 me-3">
+                        <i class="fas fa-user-tie text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Pilotos</h5>
+                        <small class="text-muted">Reporte de personal de vuelo</small>
+                    </div>
+                </div>
+                <p class="card-text">Reportes completos de pilotos con información de licencias, horas de vuelo y nacionalidad.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('reports.filtros_pilotos') }}" class="btn btn-success">
+                        <i class="fas fa-filter"></i> Configurar Filtros
+                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('reports.report_pilotos', formato='pdf') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ url_for('reports.report_pilotos', formato='excel') }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte de Vuelos -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-gradient rounded-circle p-3 me-3">
+                        <i class="fas fa-route text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Vuelos</h5>
+                        <small class="text-muted">Reporte de operaciones de vuelo</small>
+                    </div>
+                </div>
+                <p class="card-text">Análisis detallado de vuelos con filtros por estado, fechas y rutas específicas.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('reports.filtros_vuelos') }}" class="btn btn-info">
+                        <i class="fas fa-filter"></i> Configurar Filtros
+                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('reports.report_vuelos', formato='pdf') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ url_for('reports.report_vuelos', formato='excel') }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte de Confirmaciones -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-gradient rounded-circle p-3 me-3">
+                        <i class="fas fa-ticket-alt text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Confirmaciones</h5>
+                        <small class="text-muted">Reporte de reservas y pasajeros</small>
+                    </div>
+                </div>
+                <p class="card-text">Información detallada de confirmaciones de vuelo, asientos asignados y estado de reservas.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('reports.filtros_confirmaciones') }}" class="btn btn-warning">
+                        <i class="fas fa-filter"></i> Configurar Filtros
+                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('reports.report_confirmaciones', formato='pdf') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ url_for('reports.report_confirmaciones', formato='excel') }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte de Dashboard -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-dark bg-gradient rounded-circle p-3 me-3">
+                        <i class="fas fa-chart-pie text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Estadísticas Generales</h5>
+                        <small class="text-muted">Resumen ejecutivo del sistema</small>
+                    </div>
+                </div>
+                <p class="card-text">Reporte consolidado con estadísticas generales, métricas de rendimiento y resúmenes ejecutivos.</p>
+                <div class="d-grid gap-2">
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('reports.report_dashboard', formato='pdf') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ url_for('reports.report_dashboard', formato='excel') }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Información adicional -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Información sobre los Reportes</h5>
+            <ul class="mb-0">
+                <li><strong>PDF:</strong> Formato ideal para impresión y presentaciones formales</li>
+                <li><strong>Excel:</strong> Formato perfecto para análisis de datos y manipulación posterior</li>
+                <li><strong>Filtros:</strong> Utiliza los formularios de filtros para personalizar los datos según tus necesidades</li>
+                <li><strong>Actualización:</strong> Los reportes se generan en tiempo real con los datos más actuales</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

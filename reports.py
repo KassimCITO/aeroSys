@@ -174,15 +174,18 @@ def report_aeronaves():
     # Preparar datos
     data = []
     for a in aeronaves:
+        # Para el reporte, mostramos "Con imagen" o "Sin imagen" en lugar del nombre del archivo
+        imagen_status = "Con imagen" if a.imagen else "Sin imagen"
         data.append([
             a.matricula,
             a.modelo,
             a.fabricante,
             str(a.capacidad) if a.capacidad else 'N/A',
-            a.tipo_aeronave or 'N/A'
+            a.tipo_aeronave or 'N/A',
+            imagen_status
         ])
     
-    headers = ['Matrícula', 'Modelo', 'Fabricante', 'Capacidad', 'Tipo']
+    headers = ['Matrícula', 'Modelo', 'Fabricante', 'Capacidad', 'Tipo', 'Estado Imagen']
     title = f"Reporte de Aeronaves - {len(data)} registros"
     
     if fabricante:
@@ -293,12 +296,12 @@ def report_vuelos():
             v.destino,
             v.fecha_salida.strftime('%d/%m/%Y %H:%M') if v.fecha_salida else 'N/A',
             v.fecha_llegada.strftime('%d/%m/%Y %H:%M') if v.fecha_llegada else 'N/A',
-            'N/A',  # El modelo Vuelo no tiene campo estado
+            v.observaciones or 'N/A',
             aeronave.matricula if aeronave else 'N/A',
             piloto.nombre if piloto else 'N/A'
         ])
     
-    headers = ['Número Vuelo', 'Origen', 'Destino', 'Salida', 'Llegada', 'Estado', 'Aeronave', 'Piloto']
+    headers = ['Número Vuelo', 'Origen', 'Destino', 'Salida', 'Llegada', 'Observaciones', 'Aeronave', 'Piloto']
     title = f"Reporte de Vuelos - {len(data)} registros"
     
     if estado:

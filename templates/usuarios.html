@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<div class="container">
+    <h3 class="my-4">Gestión de Usuarios</h3>
+    <div class="mb-3">
+        <button class="btn btn-primary" onclick="showCreate()">Crear Usuario</button>
+    </div>
+
+    <div id="formArea" style="display:none;" class="mb-3 card p-3">
+        <h5 id="formTitle" class="mb-3">Nuevo Usuario</h5>
+        <form id="usuarioForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de Usuario *</label>
+                        <input id="username" class="form-control" required maxlength="50" placeholder="Ej: jperez">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña *</label>
+                        <input id="password" type="password" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="rol" class="form-label">Rol</label>
+                        <select id="rol" class="form-select">
+                            <option value="admin">Administrador</option>
+                            <option value="staff">Personal</option>
+                            <option value="user">Usuario</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" onclick="saveUsuario()">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="listArea" class="table-responsive">
+        <table class="table table-hover" id="tblU">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td><span class="badge bg-{{ 'primary' if u.rol == 'admin' else 'secondary' if u.rol == 'staff' else 'info' }}">{{ u.rol }}</span></td>
+                    <td>{{ u.created_at.strftime('%d/%m/%Y %H:%M') if u.created_at else '-' }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editU({{ u.id }})">Editar</button>
+                        {% if u.id != current_user.id %}
+                        <button class="btn btn-sm btn-danger" onclick="delU({{ u.id }})">Eliminar</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function showMessage(message, type) {
+    type = type || 'success';
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h3').nextSibling);
+    setTimeout(function() { alertDiv.remove(); }, 5000);
+}
+
+function validateForm() {
+    var form = document.getElementById('usuarioForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+function resetForm() {
+    var form = document.getElementById('usuarioForm');
+    form.reset();
+    form.classList.remove('was-validated');
+}
+
+function saveUsuario() {
+    if (!validateForm()) return;
+
+    var payload = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        rol: document.getElementById('rol').value
+    };
+    
+    fetch('/api/usuarios', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        if (!response.ok) throw new Error('Error al guardar el usuario');
+        showMessage('Usuario guardado exitosamente');
+        hideForm();
+        location.reload();
+    })
+    .catch(function(error) {
+        showMessage(error.message, 'danger');
+    });
+}
+
+function editU(id) {
+    // Para editar usuarios necesitaríamos una API específica
+    showMessage('Función de edición no implementada', 'warning');
+}
+
+function delU(id) {
+    if (!confirm('¿Está seguro que desea eliminar el usuario #' + id + '?')) return;
+    
+    fetch('/api/usuarios/' + id, {method: 'DELETE'})
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al eliminar el usuario');
+            showMessage('Usuario eliminado exitosamente');
+            location.reload();
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'danger');
+        });
+}
+
+function showCreate() {
+    resetForm();
+    document.getElementById('formTitle').textContent = 'Nuevo Usuario';
+    document.getElementById('formArea').style.display = 'block';
+    document.querySelector('#formArea button.btn-success').onclick = saveUsuario;
+}
+
+function hideForm() {
+    resetForm();
+    document.getElementById('formArea').style.display = 'none';
+}
+</script>
+{% endblock %}

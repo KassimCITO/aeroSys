@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+{% block title %}Aeronaves{% endblock %}
+{% block content %}
+<div class="container">
+    <h3 class="my-4">Gestión de Aeronaves</h3>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-primary" onclick="showCreate()">
+                <i class="fas fa-plus"></i> Agregar Aeronave
+            </button>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportarPDF()">
+                <i class="fas fa-file-pdf"></i> Exportar a PDF
+            </button>
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Filtros para Reporte</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="filtro_fabricante" class="form-label">Fabricante</label>
+                    <input id="filtro_fabricante" class="form-control" placeholder="Ej: Boeing">
+                </div>
+                <div class="col-md-4">
+                    <label for="filtro_tipo" class="form-label">Tipo de Aeronave</label>
+                    <select id="filtro_tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="Comercial">Comercial</option>
+                        <option value="Carga">Carga</option>
+                        <option value="Privado">Privado</option>
+                        <option value="Militar">Militar</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-primary" onclick="aplicarFiltros()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="formArea" style="display:none;" class="mb-3 card p-3">
+        <h5 id="formTitle" class="mb-3">Nueva Aeronave</h5>
+        <form id="aeronaveForm" onsubmit="return false;">
+            <div class="mb-3">
+                <label for="matricula" class="form-label">Matrícula *</label>
+                <input id="matricula" class="form-control" required pattern="[A-Z0-9-]+" 
+                       maxlength="20" placeholder="Ej: XA-ABC">
+                <div class="invalid-feedback">
+                    La matrícula es requerida y debe contener solo letras mayúsculas, números y guiones
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="modelo" class="form-label">Modelo *</label>
+                <input id="modelo" class="form-control" required maxlength="100" 
+                       placeholder="Ej: Boeing 737">
+                <div class="invalid-feedback">El modelo es requerido</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="fabricante" class="form-label">Fabricante</label>
+                <input id="fabricante" class="form-control" maxlength="100" 
+                       placeholder="Ej: Boeing">
+            </div>
+            
+            <div class="mb-3">
+                <label for="capacidad" class="form-label">Capacidad</label>
+                <input type="number" id="capacidad" class="form-control" min="1" max="999" 
+                       placeholder="Ej: 180">
+                <div class="invalid-feedback">La capacidad debe ser un número positivo</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="tipo_aeronave" class="form-label">Tipo de Aeronave</label>
+                <select id="tipo_aeronave" class="form-select">
+                    <option value="">Seleccione un tipo</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Carga">Carga</option>
+                    <option value="Privada">Privada</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="imagen" class="form-label">Imagen de la Aeronave</label>
+                <input type="file" class="form-control" id="imagen" accept="image/*">
+                <div id="preview" class="mt-2" style="display: none;">
+                    <img id="image-preview" class="img-thumbnail" style="max-width: 200px;">
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" onclick="saveAeronave()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <button class="btn btn-secondary" onclick="hideForm()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="listArea" class="table-responsive">
+        <table class="table table-hover" id="tblA">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Matrícula</th>
+                    <th>Modelo</th>
+                    <th>Fabricante</th>
+                    <th>Capacidad</th>
+                    <th>Tipo</th>
+                    <th>Imagen</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de éxito -->
+<div class="modal fade" id="saveSuccessModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-check-circle text-success me-2"></i>Operación exitosa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="saveSuccessMessage">Cambios guardados correctamente.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<script>
+// Función para mostrar mensajes
+function showMessage(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h3').nextSibling);
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// Función para validar el formulario
+function validateForm() {
+    const form = document.getElementById('aeronaveForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+// Función para limpiar el formulario
+function resetForm() {
+    const form = document.getElementById('aeronaveForm');
+    form.reset();
+    form.classList.remove('was-validated');
+    document.getElementById('preview').style.display = 'none';
+}
+
+async function fetchAeronaves() {
+    try {
+        const res = await fetch('/api/aeronaves');
+        if (!res.ok) throw new Error('Error al cargar aeronaves');
+        
+        const data = await res.json();
+        const tbody = document.querySelector('#tblA tbody');
+        tbody.innerHTML = '';
+        
+        data.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${r.aeronave_id}</td>
+                <td>${r.matricula}</td>
+                <td>${r.modelo}</td>
+                <td>${r.fabricante || '-'}</td>
+                <td>${r.capacidad || '-'}</td>
+                <td>${r.tipo_aeronave || '-'}</td>
+                <td>${r.imagen ? `<img src="/static/uploads/${r.imagen}" class="img-thumbnail" style="max-width: 50px;">` : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" title="Editar" onclick="editA(${r.aeronave_id})"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" title="Eliminar" onclick="delA(${r.aeronave_id})"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        showMessage(error.message, 'danger');
+    }
+}
+
+async function saveAeronave() {
+    if (!validateForm()) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('matricula', document.getElementById('matricula').value);
+        formData.append('modelo', document.getElementById('modelo').value);
+        formData.append('fabricante', document.getElementById('fabricante').value);
+        formData.append('capacidad', document.getElementById('capacidad').value || '0');
+        formData.append('tipo_aeronave', document.getElementById('tipo_aeronave').value);
+        
+        const imageFile = document.getElementById('imagen').files[0];
+        if (imageFile) {
+            formData.append('imagen', imageFile);
+        }
+
+        const res = await fetch('/api/aeronaves', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) throw new Error('Error al guardar la aeronave');
+        
+        // Hide form and refresh table immediately
+        hideForm();
+        fetchAeronaves();
+        showMessage('Aeronave guardada exitosamente', 'success');
+    } catch (error) {
+        showMessage(error.message, 'danger');
+    }
+}
+
+async function editA(id) {
+    try {
+        const r = await fetch('/api/aeronaves/' + id);
+        if (!r.ok) throw new Error('Error al cargar la aeronave');
+        
+        const data = await r.json();
+        
+        // Llenar el formulario
+        document.getElementById('matricula').value = data.matricula;
+        document.getElementById('modelo').value = data.modelo;
+        document.getElementById('fabricante').value = data.fabricante || '';
+        document.getElementById('capacidad').value = data.capacidad || '';
+        document.getElementById('tipo_aeronave').value = data.tipo_aeronave || '';
+        
+        // Mostrar imagen actual si existe
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('image-preview');
+        if (data.imagen) {
+            previewImg.src = `/static/uploads/${data.imagen}`;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+        
+        document.getElementById('formTitle').textContent = 'Editar Aeronave (ID ' + id + ')';
+        document.getElementById('formArea').style.display = 'block';
+        
+        // Modificar el botón guardar para actualizar
+        document.querySelector('#formArea button.btn-success').onclick = async function() {
+            if (!validateForm()) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('matricula', document.getElementById('matricula').value);
+                formData.append('modelo', document.getElementById('modelo').value);
+                formData.append('fabricante', document.getElementById('fabricante').value);
+                formData.append('capacidad', document.getElementById('capacidad').value || '0');
+                formData.append('tipo_aeronave', document.getElementById('tipo_aeronave').value);
+                
+                const imageFile = document.getElementById('imagen').files[0];
+                if (imageFile) {
+                    formData.append('imagen', imageFile);
+                }
+                
+                const res = await fetch('/api/aeronaves/' + id, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                if (!res.ok) throw new Error('Error al actualizar la aeronave');
+                
+                // Hide form and refresh table immediately
+                hideForm();
+                fetchAeronaves();
+                showMessage('Aeronave actualizada exitosamente', 'success');
+            } catch (error) {
+                showMessage(error.message, 'danger');
+            }
+        };
+    } catch (error) {
+        showMessage(error.message, 'danger');
+    }
+}
+
+async function delA(id) {
+    try {
+        if (!confirm('¿Está seguro que desea eliminar la aeronave #' + id + '?')) return;
+        
+        const res = await fetch('/api/aeronaves/' + id, { 
+            method: 'DELETE' 
+        });
+        
+        if (!res.ok) throw new Error('Error al eliminar la aeronave');
+        
+        showMessage('Aeronave eliminada exitosamente');
+        fetchAeronaves();
+    } catch (error) {
+        showMessage(error.message, 'danger');
+    }
+}
+
+// Previsualización de imagen
+document.getElementById('imagen').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('image-preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+});
+
+// Inicialización
+fetchAeronaves();
+
+function showCreate() {
+    resetForm();
+    document.getElementById('formTitle').textContent = 'Nueva Aeronave';
+    document.getElementById('formArea').style.display = 'block';
+    document.querySelector('#formArea button.btn-success').onclick = saveAeronave;
+}
+
+function hideForm() {
+    resetForm();
+    document.getElementById('formArea').style.display = 'none';
+}
+
+// Funciones para filtros y exportación
+function aplicarFiltros() {
+    var fabricante = document.getElementById('filtro_fabricante').value;
+    var tipo = document.getElementById('filtro_tipo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/aeronaves?';
+    var params = [];
+    if (fabricante) params.push('fabricante=' + encodeURIComponent(fabricante));
+    if (tipo) params.push('tipo_aeronave=' + encodeURIComponent(tipo));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Abrir reporte en nueva ventana
+    window.open(url, '_blank');
+}
+
+function exportarPDF() {
+    var fabricante = document.getElementById('filtro_fabricante').value;
+    var tipo = document.getElementById('filtro_tipo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/aeronaves?';
+    var params = [];
+    if (fabricante) params.push('fabricante=' + encodeURIComponent(fabricante));
+    if (tipo) params.push('tipo_aeronave=' + encodeURIComponent(tipo));
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Descargar PDF
+    window.location.href = url;
+}
+
+function exportarExcel() {
+    var fabricante = document.getElementById('filtro_fabricante').value;
+    var tipo = document.getElementById('filtro_tipo').value;
+    
+    // Construir URL con filtros
+    var url = '/reports/aeronaves?formato=excel';
+    var params = [];
+    if (fabricante) params.push('fabricante=' + encodeURIComponent(fabricante));
+    if (tipo) params.push('tipo_aeronave=' + encodeURIComponent(tipo));
+    
+    if (params.length > 0) {
+        url += '&' + params.join('&');
+    }
+    
+    // Descargar Excel
+    window.location.href = url;
+}
+</script>
+{% endblock %}

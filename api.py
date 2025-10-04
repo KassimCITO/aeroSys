@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify
+import os
+from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 from models import db, Aeronave, Piloto, Vuelo, Confirmacion, Usuario, ConfiguracionAeropuerto
 from datetime import datetime
@@ -16,36 +18,77 @@ def aeronaves():
             'modelo': a.modelo,
             'fabricante': a.fabricante,
             'capacidad': a.capacidad,
-            'tipo_aeronave': a.tipo_aeronave
+            'tipo_aeronave': a.tipo_aeronave,
+            'imagen': a.imagen
         } for a in items])
     # Accept both JSON and FormData
-    if request.is_json:
-        data = request.json or {}
-    else:
-        data = request.form.to_dict()
-    
-    a = Aeronave(
-        matricula=data.get('matricula'), 
-        modelo=data.get('modelo'), 
-        fabricante=data.get('fabricante'), 
-        capacidad=int(data.get('capacidad', 0)) if data.get('capacidad') else None, 
-        tipo_aeronave=data.get('tipo_aeronave')
-    )
-    db.session.add(a)
-    db.session.commit()
-    return jsonify({'msg':'ok','id':a.aeronave_id}),201
+    try:
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        if request.is_json:
+            data = request.json or {}
+            files = None
+        else:
+            data = request.form.to_dict()
+            files = request.files
+
+        matricula = (data.get('matricula') or '').strip()
+        modelo = (data.get('modelo') or '').strip()
+        if not matricula or not modelo:
+            return jsonify({'msg': 'matricula y modelo son requeridos'}), 400
+
+        capacidad_val = None
+        raw_cap = data.get('capacidad')
+        if raw_cap not in (None, '', '0'):
+            try:
+                capacidad_val = int(raw_cap)
+            except (TypeError, ValueError):
+                return jsonify({'msg': 'capacidad inválida'}), 400
+
+        imagen_filename = None
+        if files and 'imagen' in files and files['imagen']:
+            file = files['imagen']
+            if file.filename:
+                filename = secure_filename(file.filename)
+                imagen_filename = filename
+                file.save(os.path.join(upload_folder, filename))
+
+        a = Aeronave(
+            matricula=matricula,
+            modelo=modelo,
+            fabricante=(data.get('fabricante') or None),
+            capacidad=capacidad_val,
+            tipo_aeronave=(data.get('tipo_aeronave') or None),
+            imagen=imagen_filename
+        )
+        db.session.add(a)
+        db.session.commit()
+        return jsonify({'msg':'ok','id':a.aeronave_id}),201
+    except Exception as e:
+        db.session.rollback()
+        try:
+            # Provide safer string for error
+            err = str(e)
+        except Exception:
+            err = 'error'
+        return jsonify({'msg': f'error al guardar: {err}'}), 500
 
 @api_bp.route('/aeronaves/<int:id>', methods=['GET','PUT','DELETE'])
 def aeronave_item(id):
     a = Aeronave.query.get_or_404(id)
     if request.method == 'GET':
-        return jsonify({'aeronave_id': a.aeronave_id,'matricula': a.matricula,'modelo': a.modelo,'fabricante': a.fabricante,'capacidad': a.capacidad,'tipo_aeronave': a.tipo_aeronave})
+        return jsonify({'aeronave_id': a.aeronave_id,'matricula': a.matricula,'modelo': a.modelo,'fabricante': a.fabricante,'capacidad': a.capacidad,'tipo_aeronave': a.tipo_aeronave,'imagen': a.imagen})
     if request.method == 'PUT':
         # Accept both JSON and FormData
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
         if request.is_json:
             data = request.json or {}
+            files = None
         else:
             data = request.form.to_dict()
+            files = request.files
         
         a.matricula = data.get('matricula', a.matricula)
         a.modelo = data.get('modelo', a.modelo)
@@ -53,6 +96,11 @@ def aeronave_item(id):
         if data.get('capacidad'):
             a.capacidad = int(data.get('capacidad'))
         a.tipo_aeronave = data.get('tipo_aeronave', a.tipo_aeronave)
+        if files and 'imagen' in files and files['imagen'] and files['imagen'].filename:
+            file = files['imagen']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(upload_folder, filename))
+            a.imagen = filename
         db.session.commit()
         return jsonify({'msg':'updated'})
     db.session.delete(a)
@@ -64,23 +112,43 @@ def aeronave_item(id):
 def pilotos():
     if request.method == 'GET':
         items = Piloto.query.all()
-        return jsonify([{'piloto_id': p.piloto_id,'nombre': p.nombre,'licencia': p.licencia,'tipo_licencia': p.tipo_licencia,'horas_vuelo': p.horas_vuelo,'nacionalidad': p.nacionalidad} for p in items])
+        return jsonify([{
+            'piloto_id': p.piloto_id,
+            'nombre': p.nombre,
+            'licencia': p.licencia,
+            # Campos no existentes en el modelo, devueltos para compatibilidad del frontend
+            'tipo_licencia': None,
+            'horas_vuelo': p.horas_vuelo,
+            'nacionalidad': None
+        } for p in items])
     data = request.json or {}
-    p = Piloto(nombre=data.get('nombre'), licencia=data.get('licencia'), tipo_licencia=data.get('tipo_licencia'), horas_vuelo=data.get('horas_vuelo',0), nacionalidad=data.get('nacionalidad'))
-    db.session.add(p); db.session.commit()
+    p = Piloto(
+        nombre=data.get('nombre'),
+        licencia=data.get('licencia'),
+        horas_vuelo=data.get('horas_vuelo', 0)
+    )
+    db.session.add(p)
+    db.session.commit()
     return jsonify({'msg':'ok','id':p.piloto_id}),201
 
 @api_bp.route('/pilotos/<int:id>', methods=['GET','PUT','DELETE'])
 def piloto_item(id):
     p = Piloto.query.get_or_404(id)
     if request.method == 'GET':
-        return jsonify({'piloto_id': p.piloto_id,'nombre': p.nombre,'licencia': p.licencia,'tipo_licencia': p.tipo_licencia,'horas_vuelo': p.horas_vuelo,'nacionalidad': p.nacionalidad})
+        return jsonify({
+            'piloto_id': p.piloto_id,
+            'nombre': p.nombre,
+            'licencia': p.licencia,
+            'tipo_licencia': p.tipo_licencia,
+            'horas_vuelo': p.horas_vuelo,
+            'nacionalidad': p.nacionalidad
+        })
     if request.method == 'PUT':
         data = request.json or {}
         p.nombre = data.get('nombre', p.nombre)
         p.licencia = data.get('licencia', p.licencia)
-        p.tipo_licencia = data.get('tipo_licencia', p.tipo_licencia)
         p.horas_vuelo = data.get('horas_vuelo', p.horas_vuelo)
+        p.tipo_licencia = data.get('tipo_licencia', p.tipo_licencia)
         p.nacionalidad = data.get('nacionalidad', p.nacionalidad)
         db.session.commit()
         return jsonify({'msg':'updated'})
@@ -97,55 +165,91 @@ def vuelos():
         query = Vuelo.query
         if fecha:
             try:
-                # allow date or datetime prefix
                 query = query.filter(Vuelo.fecha_salida.like(f"{fecha}%"))
             except Exception:
                 pass
         if aeronave_id:
-            query = query.filter_by(id_aeronave=aeronave_id)
+            query = query.filter_by(aeronave_id=aeronave_id)
         if piloto_id:
-            query = query.filter_by(id_piloto=piloto_id)
+            query = query.filter_by(piloto_id=piloto_id)
         items = query.all()
         def todict(v):
-            return {'id_vuelo': v.id_vuelo,'codigo_vuelo': v.codigo_vuelo,'origen': v.origen,'destino': v.destino,'fecha_salida': v.fecha_salida.isoformat(),'fecha_llegada': v.fecha_llegada.isoformat() if v.fecha_llegada else None,'id_aeronave': v.id_aeronave,'id_piloto': v.id_piloto,'estado': v.estado}
+            return {
+                'id_vuelo': v.vuelo_id,
+                'codigo_vuelo': v.numero_vuelo,
+                'origen': v.origen,
+                'destino': v.destino,
+                'fecha_salida': v.fecha_salida.isoformat() if v.fecha_salida else None,
+                'fecha_llegada': v.fecha_llegada.isoformat() if v.fecha_llegada else None,
+                'id_aeronave': v.aeronave_id,
+                'id_piloto': v.piloto_id,
+                'id_copiloto': v.copiloto_id,
+                'observaciones': v.observaciones
+            }
         return jsonify([todict(x) for x in items])
     data = request.json or {}
     fs = data.get('fecha_salida')
     fl = data.get('fecha_llegada')
-    fs_dt = datetime.fromisoformat(fs) if fs else datetime.utcnow()
-    fl_dt = datetime.fromisoformat(fl) if fl else None
+    try:
+        fs_dt = datetime.fromisoformat(fs) if fs else datetime.utcnow()
+    except Exception:
+        return jsonify({'msg': 'fecha_salida inválida (ISO 8601 esperado)'}), 400
+    try:
+        fl_dt = datetime.fromisoformat(fl) if fl else None
+    except Exception:
+        return jsonify({'msg': 'fecha_llegada inválida (ISO 8601 esperado)'}), 400
     v = Vuelo(
-        codigo_vuelo=data.get('codigo_vuelo'), 
-        origen=data.get('origen'), 
-        destino=data.get('destino'), 
-        fecha_salida=fs_dt, 
-        fecha_llegada=fl_dt, 
-        id_aeronave=data.get('id_aeronave'), 
-        id_piloto=data.get('id_piloto'), 
-        estado=data.get('estado','Programado')
+        numero_vuelo=data.get('numero_vuelo') or data.get('codigo_vuelo'),
+        origen=data.get('origen'),
+        destino=data.get('destino'),
+        fecha_salida=fs_dt,
+        fecha_llegada=fl_dt,
+        aeronave_id=data.get('aeronave_id'),
+        piloto_id=data.get('piloto_id'),
+        copiloto_id=data.get('copiloto_id'),
+        observaciones=data.get('observaciones')
     )
-    db.session.add(v); db.session.commit()
-    return jsonify({'msg':'ok','id':v.id_vuelo}),201
+    try:
+        db.session.add(v); db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': f'Error al guardar vuelo: {str(e)}'}), 400
+    return jsonify({'msg':'ok','id':v.vuelo_id}),201
 
 @api_bp.route('/vuelos/<int:id>', methods=['GET','PUT','DELETE'])
 def vuelo_item(id):
     v = Vuelo.query.get_or_404(id)
     if request.method == 'GET':
-        return jsonify({'id_vuelo': v.id_vuelo,'codigo_vuelo': v.codigo_vuelo,'origen': v.origen,'destino': v.destino,'fecha_salida': v.fecha_salida.isoformat(),'fecha_llegada': v.fecha_llegada.isoformat() if v.fecha_llegada else None,'id_aeronave': v.id_aeronave,'id_piloto': v.id_piloto,'estado': v.estado})
+        return jsonify({
+            'id_vuelo': v.vuelo_id,
+            'codigo_vuelo': v.numero_vuelo,
+            'origen': v.origen,
+            'destino': v.destino,
+            'fecha_salida': v.fecha_salida.isoformat() if v.fecha_salida else None,
+            'fecha_llegada': v.fecha_llegada.isoformat() if v.fecha_llegada else None,
+            'id_aeronave': v.aeronave_id,
+            'id_piloto': v.piloto_id,
+            'id_copiloto': v.copiloto_id,
+            'observaciones': v.observaciones
+        })
     if request.method == 'PUT':
         data = request.json or {}
-        v.codigo_vuelo = data.get('codigo_vuelo', v.codigo_vuelo)
+        if 'numero_vuelo' in data or 'codigo_vuelo' in data:
+            v.numero_vuelo = data.get('numero_vuelo', data.get('codigo_vuelo', v.numero_vuelo))
         v.origen = data.get('origen', v.origen)
         v.destino = data.get('destino', v.destino)
-        v.estado = data.get('estado', v.estado)
         if data.get('fecha_salida'):
             v.fecha_salida = datetime.fromisoformat(data.get('fecha_salida'))
         if data.get('fecha_llegada'):
             v.fecha_llegada = datetime.fromisoformat(data.get('fecha_llegada'))
-        if data.get('id_aeronave'):
-            v.id_aeronave = data.get('id_aeronave')
-        if data.get('id_piloto'):
-            v.id_piloto = data.get('id_piloto')
+        if data.get('id_aeronave') is not None:
+            v.aeronave_id = data.get('id_aeronave')
+        if data.get('id_piloto') is not None:
+            v.piloto_id = data.get('id_piloto')
+        if 'id_copiloto' in data:
+            v.copiloto_id = data.get('id_copiloto')
+        if 'observaciones' in data:
+            v.observaciones = data.get('observaciones')
         db.session.commit()
         return jsonify({'msg':'updated'})
     db.session.delete(v); db.session.commit()

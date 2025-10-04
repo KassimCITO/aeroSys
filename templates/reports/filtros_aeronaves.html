@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Filtros - Reporte de Aeronaves{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-plane"></i> Filtros - Reporte de Aeronaves</h1>
+            <a href="{{ url_for('reports.reports_index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Reportes
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-filter"></i> Configurar Filtros</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('reports.report_aeronaves') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fabricante" class="form-label">Fabricante</label>
+                            <select class="form-select" id="fabricante" name="fabricante">
+                                <option value="">Todos los fabricantes</option>
+                                {% for fabricante in fabricantes %}
+                                <option value="{{ fabricante }}">{{ fabricante }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_aeronave" class="form-label">Tipo de Aeronave</label>
+                            <select class="form-select" id="tipo_aeronave" name="tipo_aeronave">
+                                <option value="">Todos los tipos</option>
+                                {% for tipo in tipos %}
+                                <option value="{{ tipo }}">{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Formato de Exportación</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formato" id="formato_pdf" value="pdf" checked>
+                                <label class="form-check-label" for="formato_pdf">
+                                    <i class="fas fa-file-pdf text-danger"></i> PDF (Recomendado para impresión)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formato" id="formato_excel" value="excel">
+                                <label class="form-check-label" for="formato_excel">
+                                    <i class="fas fa-file-excel text-success"></i> Excel (Recomendado para análisis)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('reports.reports_index') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Generar Reporte
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Información adicional -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6><i class="fas fa-info-circle"></i> Información del Reporte</h6>
+                <p class="mb-0">El reporte de aeronaves incluirá las siguientes columnas:</p>
+                <ul class="mb-0">
+                    <li><strong>Matrícula:</strong> Identificador único de la aeronave</li>
+                    <li><strong>Modelo:</strong> Modelo específico de la aeronave</li>
+                    <li><strong>Fabricante:</strong> Empresa fabricante</li>
+                    <li><strong>Capacidad:</strong> Número de pasajeros que puede transportar</li>
+                    <li><strong>Tipo:</strong> Clasificación de la aeronave</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
