@@ -16,7 +16,7 @@ import os
 
 reports_bp = Blueprint('reports', __name__)
 
-def generate_pdf_report(title, data, headers, filename):
+def generate_pdf_report(title, data, headers, filename, include_images=False):
     """Genera un reporte PDF con los datos proporcionados"""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
@@ -44,25 +44,67 @@ def generate_pdf_report(title, data, headers, filename):
     story.append(Spacer(1, 20))
     
     if data:
-        # Crear tabla
-        table_data = [headers] + data
-        table = Table(table_data)
-        
-        # Estilo de la tabla
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        
-        story.append(table)
+        if include_images and 'Imagen' in headers:
+            # Para reportes con imágenes, crear una tabla especial
+            story.append(Paragraph("Aeronaves Registradas", styles['Heading2']))
+            story.append(Spacer(1, 12))
+            
+            for i, row in enumerate(data):
+                # Crear una tabla para cada aeronave
+                aeronave_data = [
+                    ['Matrícula:', row[0]],
+                    ['Modelo:', row[1]],
+                    ['Fabricante:', row[2]],
+                    ['Capacidad:', row[3]],
+                    ['Tipo:', row[4]]
+                ]
+                
+                # Agregar imagen si existe
+                if row[5] and row[5] != 'Sin imagen':
+                    try:
+                        from reportlab.platypus import Image
+                        image_path = os.path.join('static', 'uploads', row[5])
+                        if os.path.exists(image_path):
+                            img = Image(image_path, width=100, height=75)
+                            aeronave_data.append(['Imagen:', img])
+                        else:
+                            aeronave_data.append(['Imagen:', 'Archivo no encontrado'])
+                    except Exception as e:
+                        aeronave_data.append(['Imagen:', f'Error: {str(e)}'])
+                else:
+                    aeronave_data.append(['Imagen:', 'Sin imagen'])
+                
+                table = Table(aeronave_data, colWidths=[100, 200])
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ]))
+                
+                story.append(table)
+                story.append(Spacer(1, 20))
+        else:
+            # Tabla normal sin imágenes
+            table_data = [headers] + data
+            table = Table(table_data)
+            
+            # Estilo de la tabla
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            
+            story.append(table)
     else:
         story.append(Paragraph("No hay datos para mostrar", styles['Normal']))
     
@@ -174,18 +216,16 @@ def report_aeronaves():
     # Preparar datos
     data = []
     for a in aeronaves:
-        # Para el reporte, mostramos "Con imagen" o "Sin imagen" en lugar del nombre del archivo
-        imagen_status = "Con imagen" if a.imagen else "Sin imagen"
         data.append([
             a.matricula,
             a.modelo,
             a.fabricante,
             str(a.capacidad) if a.capacidad else 'N/A',
             a.tipo_aeronave or 'N/A',
-            imagen_status
+            a.imagen or 'Sin imagen'
         ])
     
-    headers = ['Matrícula', 'Modelo', 'Fabricante', 'Capacidad', 'Tipo', 'Estado Imagen']
+    headers = ['Matrícula', 'Modelo', 'Fabricante', 'Capacidad', 'Tipo', 'Imagen']
     title = f"Reporte de Aeronaves - {len(data)} registros"
     
     if fabricante:
@@ -200,7 +240,7 @@ def report_aeronaves():
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         response.headers['Content-Disposition'] = f'attachment; filename=aeronaves_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     else:  # PDF por defecto
-        buffer = generate_pdf_report(title, data, headers, 'aeronaves.pdf')
+        buffer = generate_pdf_report(title, data, headers, 'aeronaves.pdf', include_images=True)
         response = make_response(buffer.getvalue())
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename=aeronaves_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
