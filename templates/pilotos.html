@@ -5,7 +5,9 @@
     <h3 class="my-4">Gestión de Pilotos</h3>
     <div class="mb-3 d-flex justify-content-between align-items-center">
         <div>
-            <button class="btn btn-primary" onclick="showCreate()">Agregar Piloto</button>
+            <button class="btn btn-primary" onclick="showCreate()">
+                <i class="fas fa-plus"></i> Agregar Piloto
+            </button>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-success" onclick="exportarPDF()">
@@ -264,8 +266,7 @@ function editP(id) {
             document.getElementById('horas_vuelo').value = data.horas_vuelo || 0;
             document.getElementById('nacionalidad').value = data.nacionalidad || 'México';
             
-            document.getElementById('formTitle').textContent = 'Editar Piloto (ID ' + id + ')';
-            document.getElementById('formArea').style.display = 'block';
+            showFormWithTransition('formArea', 'Editar Piloto (ID ' + id + ')');
             
             // Set the button to use savePiloto function
             document.querySelector('#formArea button.btn-success').onclick = savePiloto;
@@ -289,26 +290,16 @@ function delP(id) {
             showMessage(error.message, 'danger');
         });
 }
-
-function showForm() {
-    document.getElementById('formArea').style.display = 'block';
-}
-
 function showCreate() {
     resetForm();
-    document.getElementById('formTitle').textContent = 'Nuevo Piloto';
-    document.getElementById('formArea').style.display = 'block';
-    document.querySelector('#formArea button.btn-success').onclick = savePiloto;
-    // Defaults
-    var tipo = document.getElementById('tipo_licencia');
-    if (tipo) tipo.value = 'PPL';
-    var nac = document.getElementById('nacionalidad');
-    if (nac) nac.value = 'México';
+    showFormWithTransition('formArea', 'Nuevo Piloto');
+    var saveBtn = document.querySelector('#formArea button.btn-success');
+    if (saveBtn) saveBtn.onclick = savePiloto;
 }
 
 function hideForm() {
-    resetForm();
-    document.getElementById('formArea').style.display = 'none';
+    hideFormWithTransition('formArea');
+    setTimeout(resetForm, 400);
 }
 
 // Funciones para filtros y exportación
@@ -368,5 +359,8 @@ function exportarExcel() {
 
 // Inicialización
 fetchPilotos();
+
+// Las funciones showFormWithTransition y hideFormWithTransition están definidas globalmente en base.html
+
 </script>
 {% endblock %}

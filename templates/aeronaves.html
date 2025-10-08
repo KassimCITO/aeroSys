@@ -365,14 +365,13 @@ fetchAeronaves();
 
 function showCreate() {
     resetForm();
-    document.getElementById('formTitle').textContent = 'Nueva Aeronave';
-    document.getElementById('formArea').style.display = 'block';
+    showFormWithTransition('formArea', 'Nueva Aeronave');
     document.querySelector('#formArea button.btn-success').onclick = saveAeronave;
 }
 
 function hideForm() {
-    resetForm();
-    document.getElementById('formArea').style.display = 'none';
+    hideFormWithTransition('formArea');
+    setTimeout(resetForm, 400);
 }
 
 // Funciones para filtros y exportación
@@ -429,5 +428,51 @@ function exportarExcel() {
     // Descargar Excel
     window.location.href = url;
 }
+
+
+// Funciones mejoradas con transiciones suaves
+function showFormWithTransition(formId, title) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Agregar clase para animación
+    form.classList.remove('hiding');
+    form.style.display = 'block';
+    
+    // Forzar reflow para activar animación
+    void form.offsetWidth;
+    
+    form.classList.add('showing');
+    
+    // Actualizar título si existe
+    var formTitle = document.getElementById('formTitle');
+    if (formTitle && title) {
+        formTitle.textContent = title;
+    }
+    
+    // Scroll suave al formulario
+    setTimeout(function() {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function hideFormWithTransition(formId) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Agregar clase de salida
+    form.classList.add('hiding');
+    form.classList.remove('showing');
+    
+    // Ocultar después de la animación
+    setTimeout(function() {
+        form.style.display = 'none';
+        form.classList.remove('hiding');
+    }, 400); // Duración de la transición
+    
+    // Scroll suave al inicio
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 </script>
 {% endblock %}

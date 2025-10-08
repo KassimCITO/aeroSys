@@ -146,6 +146,50 @@
         body, .card, .navbar, .btn {
             transition: all 0.3s ease-in-out;
         }
+        
+        /* Transiciones suaves para formularios */
+        .form-container {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top center;
+        }
+        
+        .form-container.form-hiding {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.98);
+            pointer-events: none;
+        }
+        
+        .form-container.form-showing {
+            animation: formSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes formSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Transición mejorada para botones */
+        .btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:not(:disabled):active {
+            transform: scale(0.97);
+            transition-duration: 0.1s;
+        }
+        
+        /* Modales con transiciones mejoradas */
+        .modal.fade .modal-dialog {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         /* Responsive para móviles */
         @media (max-width: 768px) {
@@ -487,6 +531,63 @@ function removeNotification(notification) {
 
 // Alias para compatibilidad con código existente
 window.showMessage = showNotification;
+
+// =======================================
+// FUNCIONES GLOBALES PARA TRANSICIONES DE FORMULARIOS
+// =======================================
+
+function showFormWithTransition(formId, title) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Remover clase de salida si existe
+    form.classList.remove('form-hiding');
+    form.style.display = 'block';
+    
+    // Forzar reflow para activar animación
+    void form.offsetWidth;
+    
+    form.classList.add('form-showing');
+    
+    // Actualizar título si existe
+    var formTitle = document.getElementById('formTitle');
+    if (formTitle && title) {
+        formTitle.textContent = title;
+    }
+    
+    // Scroll suave al formulario después de un breve delay
+    setTimeout(function() {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }, 150);
+    
+    // Remover clase de animación después de completar
+    setTimeout(function() {
+        form.classList.remove('form-showing');
+    }, 400);
+}
+
+function hideFormWithTransition(formId, callback) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Agregar clase de salida
+    form.classList.add('form-hiding');
+    form.classList.remove('form-showing');
+    
+    // Ocultar después de la animación
+    setTimeout(function() {
+        form.style.display = 'none';
+        form.classList.remove('form-hiding');
+        
+        // Ejecutar callback si existe
+        if (callback && typeof callback === 'function') {
+            callback();
+        }
+    }, 400);
+    
+    // Scroll suave al inicio
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 
 

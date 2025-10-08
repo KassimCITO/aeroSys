@@ -213,11 +213,11 @@ python seed.py
 
 - **Documentación:** Consulta los manuales incluidos
 - **Issues:** Reporta problemas en el repositorio
-- **Email:** soporte@aeropuerto.com
+- **Email:** KassimCITO@gmail.com
 
 ## 📄 Licencia
 
-© 2024 Sistema de Gestión de Aeropuertos. Todos los derechos reservados.
+© 2024-2025 Sistema de Gestión de Aeropuertos. Todos los derechos reservados.
 
 ## 🔄 Changelog
 

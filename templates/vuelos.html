@@ -10,10 +10,9 @@ var canConfirmVuelos = false; // Variable para controlar permisos de confirmaci�
 
 function showCreate() {
     resetForm();
-    document.getElementById('formTitle').textContent = 'Nuevo Vuelo';
-    document.getElementById('formCard').style.display = 'block';
-    loadAeronaves();
-    loadPilotos();
+    showFormWithTransition('formCard', 'Nuevo Vuelo');
+    var saveBtn = document.querySelector('#formCard button.btn-success');
+    if (saveBtn) saveBtn.onclick = saveVuelos;
 }
 
 // Sistema de notificaciones local (compatible con global)
@@ -65,8 +64,8 @@ function resetForm() {
 }
 
 function hideForm() {
-    resetForm();
-    document.getElementById('formCard').style.display = 'none';
+    hideFormWithTransition('formCard');
+    setTimeout(resetForm, 400);
 }
 
 function loadAeronaves() {
@@ -170,6 +169,7 @@ function fetchVuelos() {
                 data.forEach(function(r) {
                     var aeronave = aeronaves.find(function(a) { return a.aeronave_id === r.id_aeronave; });
                     var piloto = pilotos.find(function(p) { return p.piloto_id === r.id_piloto; });
+                    var copiloto = r.id_copiloto ? pilotos.find(function(p) { return p.piloto_id === r.id_copiloto; }) : null;
                     
                     var tr = document.createElement('tr');
                     tr.innerHTML = '<td>' + r.codigo_vuelo + '</td>' +
@@ -179,7 +179,7 @@ function fetchVuelos() {
                                   '<td>' + (r.fecha_llegada ? new Date(r.fecha_llegada).toLocaleString() : '-') + '</td>' +
                                   '<td>' + (aeronave ? aeronave.matricula : r.id_aeronave) + '</td>' +
                                   '<td>' + (piloto ? piloto.nombre : r.id_piloto) + '</td>' +
-                                  '<td>' + (r.id_copiloto ? pilotos.find(p => p.piloto_id === r.id_copiloto).nombre : '-') + '</td>' +
+                                  '<td>' + (copiloto ? copiloto.nombre : '-') + '</td>' +
                                   '<td>' + (r.observaciones || '-') + '</td>' +
                                   '<td>' +
                                   '<button class="btn btn-sm btn-warning" title="Editar" onclick="editV(' + r.id_vuelo + ')"><i class="fas fa-edit"></i></button> ' +
@@ -701,6 +701,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     init();
 });
+
+
+// Funciones mejoradas con transiciones suaves
+function showFormWithTransition(formId, title) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Agregar clase para animación
+    form.classList.remove('hiding');
+    form.style.display = 'block';
+    
+    // Forzar reflow para activar animación
+    void form.offsetWidth;
+    
+    form.classList.add('showing');
+    
+    // Actualizar título si existe
+    var formTitle = document.getElementById('formTitle');
+    if (formTitle && title) {
+        formTitle.textContent = title;
+    }
+    
+    // Scroll suave al formulario
+    setTimeout(function() {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function hideFormWithTransition(formId) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Agregar clase de salida
+    form.classList.add('hiding');
+    form.classList.remove('showing');
+    
+    // Ocultar después de la animación
+    setTimeout(function() {
+        form.style.display = 'none';
+        form.classList.remove('hiding');
+    }, 400); // Duración de la transición
+    
+    // Scroll suave al inicio
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 </script>
 {% endblock %}
 
@@ -756,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- Formulario de Vuelo -->
-    <div class="card mb-4" id="formCard" style="display: none;">
+    <div class="card mb-4" id="formCard" form-container style="display: none;">
         <div class="card-body">
             <h4 class="card-title" id="formTitle">Nuevo Vuelo</h4>
             <form id="vueloForm">

@@ -312,8 +312,8 @@ El dashboard es la pantalla principal del sistema y muestra:
 - Contacta al soporte técnico si es necesario
 
 ### Contacto de Soporte
-- **Email:** soporte@aeropuerto-cit.com
-- **Teléfono:** +52 (55) 1234-5678
+- **Email:** KassimCITO@gmail.com
+- **Teléfono:** +52 (443) 505.1882
 - **Horario:** Lunes a Viernes, 8:00 AM - 6:00 PM
 
 ---
