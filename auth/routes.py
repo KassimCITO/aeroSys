@@ -15,7 +15,7 @@ def login():
             login_user(user)
             return redirect(url_for('main.dashboard'))
         
-        flash('Usuario o contraseña incorrectos', 'danger')
+        flash('❌ Usuario o contraseña incorrectos. Por favor verifica tus credenciales.', 'danger')
     return render_template('auth/login.html')
 
 @auth_bp.route('/logout')

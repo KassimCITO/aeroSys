@@ -36,7 +36,7 @@ def aeronaves():
         matricula = (data.get('matricula') or '').strip()
         modelo = (data.get('modelo') or '').strip()
         if not matricula or not modelo:
-            return jsonify({'msg': 'matricula y modelo son requeridos'}), 400
+            return jsonify({'msg': '❌ Error: La matrícula y el modelo son campos obligatorios'}), 400
 
         capacidad_val = None
         raw_cap = data.get('capacidad')
@@ -44,7 +44,7 @@ def aeronaves():
             try:
                 capacidad_val = int(raw_cap)
             except (TypeError, ValueError):
-                return jsonify({'msg': 'capacidad inválida'}), 400
+                return jsonify({'msg': '❌ Error: La capacidad debe ser un número válido'}), 400
 
         imagen_filename = None
         if files and 'imagen' in files and files['imagen']:
@@ -194,11 +194,11 @@ def vuelos():
     try:
         fs_dt = datetime.fromisoformat(fs) if fs else datetime.utcnow()
     except Exception:
-        return jsonify({'msg': 'fecha_salida inválida (ISO 8601 esperado)'}), 400
+        return jsonify({'msg': '❌ Error: Formato de fecha de salida inválido. Use formato ISO 8601'}), 400
     try:
         fl_dt = datetime.fromisoformat(fl) if fl else None
     except Exception:
-        return jsonify({'msg': 'fecha_llegada inválida (ISO 8601 esperado)'}), 400
+        return jsonify({'msg': '❌ Error: Formato de fecha de llegada inválido. Use formato ISO 8601'}), 400
     v = Vuelo(
         numero_vuelo=data.get('numero_vuelo') or data.get('codigo_vuelo'),
         origen=data.get('origen'),
@@ -267,7 +267,7 @@ def confirmaciones():
     
     # Verificar permisos: solo operadores autorizados (no piloto ni invitado)
     if current_user.rol in ['piloto', 'invitado']:
-        return jsonify({'msg':'Acceso denegado. Solo operadores autorizados pueden confirmar vuelos.'}), 403
+        return jsonify({'msg':'🚫 Acceso Denegado: Solo operadores autorizados pueden confirmar vuelos'}), 403
     
     c = Confirmacion(vuelo_id=data.get('vuelo_id'), estado=data.get('estado','Pendiente'), notas=data.get('notas'))
     db.session.add(c); db.session.commit()
@@ -283,7 +283,7 @@ def usuarios():
     data = request.json or {}
     username = data.get('username'); password = data.get('password'); rol = data.get('rol','admin')
     if not username or not password:
-        return jsonify({'msg':'username and password required'}),400
+        return jsonify({'msg':'❌ Error: Usuario y contraseña son requeridos'}),400
     u = Usuario(username=username, rol=rol)
     u.set_password(password)
     db.session.add(u); db.session.commit()

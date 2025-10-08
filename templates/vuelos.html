@@ -16,6 +16,7 @@ function showCreate() {
     loadPilotos();
 }
 
+// Sistema de notificaciones local (compatible con global)
 function showMessage(message, type) {
     type = type || 'success';
     var alertDiv = document.createElement('div');
@@ -69,7 +70,7 @@ function hideForm() {
 }
 
 function loadAeronaves() {
-    fetch('/api/aeronaves')
+    return fetch('/api/aeronaves')
         .then(function(response) {
             if (!response.ok) throw new Error('Error al cargar aeronaves');
             return response.json();
@@ -77,6 +78,7 @@ function loadAeronaves() {
         .then(function(data) {
             aeronaves = data;
             var select = document.getElementById('aeronave_id');
+            var currentValue = select.value;
             select.innerHTML = '<option value="">Seleccione una aeronave</option>';
             data.forEach(function(a) {
                 var option = document.createElement('option');
@@ -84,45 +86,57 @@ function loadAeronaves() {
                 option.textContent = a.matricula + ' - ' + a.modelo;
                 select.appendChild(option);
             });
+            if (currentValue && document.querySelector('#aeronave_id option[value="' + currentValue + '"]')) {
+                select.value = currentValue;
+            }
+            return data;
         })
         .catch(function(error) {
             showMessage('Error al cargar aeronaves: ' + error.message, 'danger');
+            throw error;
         });
 }
 
 function loadPilotos() {
-    fetch('/api/pilotos')
+    return fetch('/api/pilotos')
         .then(function(response) {
             if (!response.ok) throw new Error('Error al cargar pilotos');
             return response.json();
         })
         .then(function(data) {
             pilotos = data;
-            // Cargar selector de piloto
             var selectPiloto = document.getElementById('piloto_id');
+            var currentPilotoValue = selectPiloto.value;
             selectPiloto.innerHTML = '<option value="">Seleccione un piloto</option>';
             
-            // Cargar selector de copiloto
             var selectCopiloto = document.getElementById('copiloto_id');
+            var currentCopilotoValue = selectCopiloto.value;
             selectCopiloto.innerHTML = '<option value="">Seleccione un copiloto (opcional)</option>';
             
-            // Agregar opciones a ambos selectores
             data.forEach(function(p) {
-                // Opción para piloto
                 var optionPiloto = document.createElement('option');
                 optionPiloto.value = p.piloto_id;
                 optionPiloto.textContent = p.nombre + ' (' + p.licencia + ')';
                 selectPiloto.appendChild(optionPiloto);
                 
-                // Opción para copiloto
                 var optionCopiloto = document.createElement('option');
                 optionCopiloto.value = p.piloto_id;
                 optionCopiloto.textContent = p.nombre + ' (' + p.licencia + ')';
                 selectCopiloto.appendChild(optionCopiloto);
             });
+            
+            if (currentPilotoValue && document.querySelector('#piloto_id option[value="' + currentPilotoValue + '"]')) {
+                selectPiloto.value = currentPilotoValue;
+            }
+            if (currentCopilotoValue && document.querySelector('#copiloto_id option[value="' + currentCopilotoValue + '"]')) {
+                selectCopiloto.value = currentCopilotoValue;
+            }
+            
+            return data;
         })
         .catch(function(error) {
             showMessage('Error al cargar pilotos: ' + error.message, 'danger');
+            throw error;
         });
 }
 
@@ -494,8 +508,197 @@ function guardarConfirmacion() {
     });
 }
 
-// Inicializar cuando se carga la página
+
+// =======================================
+// FUNCIONES PARA MODALES DE CREACIÓN RÁPIDA
+// =======================================
+
+// Función para mostrar modal de agregar aeronave
+function showAeronaveModal() {
+    resetAeronaveModalForm();
+    var modal = new bootstrap.Modal(document.getElementById('agregarAeronaveModal'));
+    modal.show();
+}
+
+// Función para resetear formulario de aeronave modal
+function resetAeronaveModalForm() {
+    var form = document.getElementById('aeronaveModalForm');
+    form.reset();
+    form.classList.remove('was-validated');
+    // Limpiar preview de imagen
+    document.getElementById('modal_preview').style.display = 'none';
+    document.getElementById('modal_image_preview').src = '';
+}
+
+// Función para validar formulario de aeronave modal
+function validateAeronaveModalForm() {
+    var form = document.getElementById('aeronaveModalForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+// Función para guardar aeronave desde modal
+function guardarAeronaveModal() {
+    if (!validateAeronaveModalForm()) {
+        showMessage('Por favor complete los campos requeridos correctamente', 'warning');
+        return;
+    }
+    
+    // Usar FormData para soportar archivos
+    var formData = new FormData();
+    formData.append('matricula', document.getElementById('modal_matricula').value.trim().toUpperCase());
+    formData.append('modelo', document.getElementById('modal_modelo').value.trim());
+    formData.append('fabricante', document.getElementById('modal_fabricante').value.trim() || '');
+    formData.append('capacidad', document.getElementById('modal_capacidad').value || '0');
+    formData.append('tipo_aeronave', document.getElementById('modal_tipo_aeronave').value || '');
+    
+    // Agregar imagen si fue seleccionada
+    var imageFile = document.getElementById('modal_imagen').files[0];
+    if (imageFile) {
+        formData.append('imagen', imageFile);
+    }
+    
+    fetch('/api/aeronaves', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(data) {
+                throw new Error(data.msg || 'Error al guardar la aeronave');
+            });
+        }
+        return response.json();
+    })
+    .then(function(data) {
+        // Cerrar modal
+        var modalElement = document.getElementById('agregarAeronaveModal');
+        var modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Refrescar lista de aeronaves
+        loadAeronaves().then(function() {
+            // Seleccionar la aeronave recién creada
+            if (data.id) {
+                document.getElementById('aeronave_id').value = data.id;
+            }
+            showMessage('Aeronave agregada exitosamente', 'success');
+        });
+    })
+    .catch(function(error) {
+        showMessage('Error al guardar aeronave: ' + error.message, 'danger');
+    });
+}
+
+// Función para mostrar modal de agregar piloto
+function showPilotoModal() {
+    resetPilotoModalForm();
+    var modal = new bootstrap.Modal(document.getElementById('agregarPilotoModal'));
+    modal.show();
+}
+
+// Función para resetear formulario de piloto modal
+function resetPilotoModalForm() {
+    var form = document.getElementById('pilotoModalForm');
+    form.reset();
+    form.classList.remove('was-validated');
+    // Establecer valores por defecto
+    document.getElementById('modal_tipo_licencia').value = 'PPL';
+    document.getElementById('modal_nacionalidad').value = 'México';
+    document.getElementById('modal_horas_vuelo').value = '0';
+}
+
+// Función para validar formulario de piloto modal
+function validatePilotoModalForm() {
+    var form = document.getElementById('pilotoModalForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    return true;
+}
+
+// Función para guardar piloto desde modal
+function guardarPilotoModal() {
+    if (!validatePilotoModalForm()) {
+        showMessage('Por favor complete los campos requeridos correctamente', 'warning');
+        return;
+    }
+    
+    var payload = {
+        nombre: document.getElementById('modal_nombre').value.trim(),
+        licencia: document.getElementById('modal_licencia').value.trim(),
+        tipo_licencia: document.getElementById('modal_tipo_licencia').value,
+        horas_vuelo: parseInt(document.getElementById('modal_horas_vuelo').value) || 0,
+        nacionalidad: document.getElementById('modal_nacionalidad').value.trim()
+    };
+    
+    fetch('/api/pilotos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(data) {
+                throw new Error(data.msg || 'Error al guardar el piloto');
+            });
+        }
+        return response.json();
+    })
+    .then(function(data) {
+        // Cerrar modal
+        var modalElement = document.getElementById('agregarPilotoModal');
+        var modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Refrescar lista de pilotos
+        loadPilotos().then(function() {
+            // Seleccionar el piloto recién creado
+            if (data.id) {
+                document.getElementById('piloto_id').value = data.id;
+            }
+            showMessage('Piloto agregado exitosamente', 'success');
+        });
+    })
+    .catch(function(error) {
+        showMessage('Error al guardar piloto: ' + error.message, 'danger');
+    });
+}
+
+// Event listener para previsualización de imagen en modal de aeronave
 document.addEventListener('DOMContentLoaded', function() {
+    // Preview de imagen en modal
+    var modalImagenInput = document.getElementById('modal_imagen');
+    if (modalImagenInput) {
+        modalImagenInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var preview = document.getElementById('modal_preview');
+            var previewImg = document.getElementById('modal_image_preview');
+            
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    }
+    
     init();
 });
 </script>
@@ -566,9 +769,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="aeronave_id" class="form-label">Aeronave *</label>
-                        <select class="form-select" id="aeronave_id" required>
-                            <option value="">Seleccione una aeronave</option>
-                        </select>
+                        <div class="input-group">
+                            <select class="form-select" id="aeronave_id" required>
+                                <option value="">Seleccione una aeronave</option>
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" onclick="showAeronaveModal()" title="Agregar nueva aeronave">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -597,9 +805,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="piloto_id" class="form-label">Piloto *</label>
-                        <select class="form-select" id="piloto_id" required>
-                            <option value="">Seleccione un piloto</option>
-                        </select>
+                        <div class="input-group">
+                            <select class="form-select" id="piloto_id" required>
+                                <option value="">Seleccione un piloto</option>
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" onclick="showPilotoModal()" title="Agregar nuevo piloto">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="copiloto_id" class="form-label">Copiloto</label>
@@ -681,6 +894,143 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+</div>
+
+<!-- Modal para Agregar Aeronave -->
+<div class="modal fade" id="agregarAeronaveModal" tabindex="-1" aria-labelledby="agregarAeronaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarAeronaveModalLabel">
+                    <i class="fas fa-plane me-2"></i>Agregar Nueva Aeronave
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="aeronaveModalForm" novalidate>
+                    <div class="mb-3">
+                        <label for="modal_matricula" class="form-label">Matrícula *</label>
+                        <input type="text" class="form-control" id="modal_matricula" required 
+                               pattern="[A-Z0-9-]+" maxlength="20" placeholder="Ej: XA-ABC">
+                        <div class="invalid-feedback">
+                            La matrícula es requerida (solo letras mayúsculas, números y guiones)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_modelo" class="form-label">Modelo *</label>
+                        <input type="text" class="form-control" id="modal_modelo" required 
+                               maxlength="100" placeholder="Ej: Boeing 737">
+                        <div class="invalid-feedback">
+                            El modelo es requerido
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_fabricante" class="form-label">Fabricante</label>
+                        <input type="text" class="form-control" id="modal_fabricante" 
+                               maxlength="100" placeholder="Ej: Boeing">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_capacidad" class="form-label">Capacidad</label>
+                        <input type="number" class="form-control" id="modal_capacidad" 
+                               min="1" max="999" placeholder="Ej: 180">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_tipo_aeronave" class="form-label">Tipo de Aeronave</label>
+                        <select class="form-select" id="modal_tipo_aeronave">
+                            <option value="">Seleccione un tipo</option>
+                            <option value="Comercial">Comercial</option>
+                            <option value="Carga">Carga</option>
+                            <option value="Privada">Privada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_imagen" class="form-label">Imagen de la Aeronave</label>
+                        <input type="file" class="form-control" id="modal_imagen" accept="image/*">
+                        <div id="modal_preview" class="mt-2" style="display: none;">
+                            <img id="modal_image_preview" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="guardarAeronaveModal()">
+                    <i class="fas fa-save me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Piloto -->
+<div class="modal fade" id="agregarPilotoModal" tabindex="-1" aria-labelledby="agregarPilotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarPilotoModalLabel">
+                    <i class="fas fa-user-tie me-2"></i>Agregar Nuevo Piloto
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="pilotoModalForm" novalidate>
+                    <div class="mb-3">
+                        <label for="modal_nombre" class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-control" id="modal_nombre" required 
+                               maxlength="100" placeholder="Ej: Juan Pérez García">
+                        <div class="invalid-feedback">
+                            El nombre es requerido
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_licencia" class="form-label">Número de Licencia *</label>
+                        <input type="text" class="form-control" id="modal_licencia" required 
+                               maxlength="50" placeholder="Ej: ATP-12345">
+                        <div class="invalid-feedback">
+                            La licencia es requerida
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_tipo_licencia" class="form-label">Tipo de Licencia</label>
+                        <select class="form-select" id="modal_tipo_licencia">
+                            <option value="PPL" selected>PPL - Licencia de Piloto Privado</option>
+                            <option value="CPL">CPL - Licencia de Piloto Comercial</option>
+                            <option value="ATPL">ATPL - Licencia de Piloto de Transporte</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_horas_vuelo" class="form-label">Horas de Vuelo</label>
+                        <input type="number" class="form-control" id="modal_horas_vuelo" 
+                               min="0" max="99999" placeholder="Ej: 1500" value="0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_nacionalidad" class="form-label">Nacionalidad</label>
+                        <input type="text" class="form-control" id="modal_nacionalidad" 
+                               maxlength="50" placeholder="Ej: México" value="México">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="guardarPilotoModal()">
+                    <i class="fas fa-save me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal para Confirmar Vuelo -->

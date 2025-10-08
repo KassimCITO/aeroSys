@@ -1,6 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Confirmaciones{% endblock %}
 {% block content %}
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle me-2"></i>
+                        {% elif category == 'danger' %}
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% elif category == 'info' %}
+                            <i class="fas fa-info-circle me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
 <div class="container">
     <h3 class="my-4">Gestión de Confirmaciones</h3>
     <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -94,8 +117,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Vuelo</th>
-                    <th>Estado</th>
-                    <th>Notas</th>
+                    <th>Estátus</th>
+                    <th>Observaciones</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -107,6 +130,7 @@
 <script>
 var vuelos = [];
 
+// Sistema de notificaciones local (compatible con global)
 function showMessage(message, type) {
     type = type || 'success';
     var alertDiv = document.createElement('div');
@@ -191,8 +215,8 @@ function fetchConfirmaciones() {
                               '<td><span class="badge bg-' + getEstadoColor(r.estado) + '">' + r.estado + '</span></td>' +
                               '<td>' + (r.notas || '-') + '</td>' +
                               '<td>' +
-                              '<button class="btn btn-sm btn-warning" onclick="editC(' + r.confirmacion_id + ')">Editar</button> ' +
-                              '<button class="btn btn-sm btn-danger" onclick="delC(' + r.confirmacion_id + ')">Eliminar</button>' +
+                              '<button class="btn btn-sm btn-warning" onclick="editC(' + r.confirmacion_id + ')"><i class="fas fa-edit"></i></button> ' +
+                              '<button class="btn btn-sm btn-danger" onclick="delC(' + r.confirmacion_id + ')"><i class="fas fa-trash"></i></button>' +
                               '</td>';
                 tbody.appendChild(tr);
             });

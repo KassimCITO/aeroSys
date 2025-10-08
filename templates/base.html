@@ -157,6 +157,117 @@
                 padding: 12px 0;
             }
         }
+
+        /* Sistema de Notificaciones Mejorado */
+        .notification-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        @media (max-width: 576px) {
+            .notification-container {
+                top: 60px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+
+        .notification-alert {
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            font-size: 15px;
+        }
+
+        .notification-alert.fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .notification-alert .alert-icon {
+            font-size: 22px;
+            margin-right: 12px;
+            min-width: 22px;
+        }
+
+        .notification-alert .alert-content {
+            flex: 1;
+        }
+
+        .notification-alert .btn-close {
+            margin-left: 12px;
+            opacity: 0.6;
+        }
+
+        .notification-alert .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Colores mejorados para cada tipo */
+        .notification-alert.alert-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-left: 5px solid #155724;
+        }
+
+        .notification-alert.alert-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e63946 100%);
+            color: white;
+            border-left: 5px solid #721c24;
+        }
+
+        .notification-alert.alert-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #212529;
+            border-left: 5px solid #856404;
+        }
+
+        .notification-alert.alert-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border-left: 5px solid #0c5460;
+        }
+
+        .notification-alert.alert-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border-left: 5px solid #004085;
+        }
+
+        [data-bs-theme="dark"] .notification-alert {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-bs-theme="dark"] .notification-alert.alert-warning {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -184,6 +295,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.page_vuelos') }}">Vuelos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.page_confirmaciones') }}">Confirmaciones</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('reports.reports_index') }}">Reportes</a>
@@ -217,6 +331,9 @@
             </div>
         </div>
     </nav>
+
+    <!-- Contenedor de notificaciones Flash -->
+    <div id="flash-messages-container" class="container mt-3"></div>
 
     <div class="container py-4">
         {% block content %}{% endblock %}
@@ -268,7 +385,110 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Cargar datos de configuración del aeropuerto
     loadAirportConfig();
+    
+    // Renderizar mensajes flash
+    renderFlashMessages();
 });
+
+
+// =======================================
+// SISTEMA GLOBAL DE NOTIFICACIONES
+// =======================================
+
+// Renderizar mensajes flash del servidor
+document.addEventListener('DOMContentLoaded', function() {
+    renderFlashMessages();
+});
+
+function renderFlashMessages() {
+    // Los mensajes flash se inyectan en el HTML por el servidor
+    const flashContainer = document.getElementById('flash-messages-container');
+    if (!flashContainer) return;
+    
+    // Mover mensajes flash a contenedor de notificaciones
+    const alerts = flashContainer.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        const type = Array.from(alert.classList).find(c => c.startsWith('alert-'));
+        const message = alert.textContent.trim();
+        const category = type ? type.replace('alert-', '') : 'info';
+        
+        showNotification(message, category);
+        alert.remove();
+    });
+}
+
+// Función global para mostrar notificaciones
+function showNotification(message, type = 'info', duration = 5000) {
+    // Crear contenedor si no existe
+    let container = document.querySelector('.notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+    }
+
+    // Mapeo de iconos
+    const icons = {
+        'success': 'fa-check-circle',
+        'danger': 'fa-exclamation-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle',
+        'primary': 'fa-bell'
+    };
+
+    // Normalizar tipo
+    const normalizedType = type === 'error' ? 'danger' : type;
+    const icon = icons[normalizedType] || icons['info'];
+
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `notification-alert alert alert-${normalizedType} alert-dismissible`;
+    notification.setAttribute('role', 'alert');
+    
+    notification.innerHTML = `
+        <i class="fas ${icon} alert-icon"></i>
+        <div class="alert-content">${message}</div>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+    `;
+
+    // Agregar al contenedor
+    container.appendChild(notification);
+
+    // Evento para cerrar manualmente
+    const closeBtn = notification.querySelector('.btn-close');
+    closeBtn.addEventListener('click', function() {
+        removeNotification(notification);
+    });
+
+    // Auto-cerrar después del tiempo especificado
+    if (duration > 0) {
+        setTimeout(function() {
+            removeNotification(notification);
+        }, duration);
+    }
+
+    // Hacer scroll al inicio si es error crítico
+    if (normalizedType === 'danger' || normalizedType === 'error') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    return notification;
+}
+
+function removeNotification(notification) {
+    notification.classList.add('fade-out');
+    setTimeout(function() {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 300);
+}
+
+// Alias para compatibilidad con código existente
+window.showMessage = showNotification;
+
+
 
 function loadAirportConfig() {
     fetch('/api/configuracion-aeropuerto')

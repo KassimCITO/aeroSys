@@ -39,7 +39,6 @@ def page_vuelos():
         # The copiloto assignment logic should be in the API endpoint
         pass
     return render_template('vuelos.html', pilotos=pilotos)
-
 @main_bp.route('/admin/confirmaciones')
 @login_required
 def page_confirmaciones():
@@ -53,3 +52,8 @@ def page_usuarios():
         return redirect(url_for('main.dashboard'))
     users = Usuario.query.all()
     return render_template('usuarios.html', users=users)
+
+@main_bp.route('/demo/notificaciones')
+@login_required
+def demo_notificaciones():
+    return render_template('demo_notificaciones.html')

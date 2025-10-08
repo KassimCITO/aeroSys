@@ -5,6 +5,29 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-4">
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% elif category == 'danger' %}
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% elif category == 'info' %}
+                                <i class="fas fa-info-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title text-center mb-4">Iniciar Sesión</h4>

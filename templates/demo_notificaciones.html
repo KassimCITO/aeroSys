@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Demo de Notificaciones{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">🎨 Demo del Sistema de Notificaciones</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Tipos de Notificaciones</h5>
+        </div>
+        <div class="card-body">
+            <p>Haz clic en los botones para probar cada tipo de notificación:</p>
+            
+            <div class="d-grid gap-2 d-md-block">
+                <button class="btn btn-success me-2 mb-2" onclick="testSuccess()">
+                    <i class="fas fa-check-circle"></i> Probar Success
+                </button>
+                
+                <button class="btn btn-danger me-2 mb-2" onclick="testError()">
+                    <i class="fas fa-exclamation-circle"></i> Probar Error
+                </button>
+                
+                <button class="btn btn-warning me-2 mb-2" onclick="testWarning()">
+                    <i class="fas fa-exclamation-triangle"></i> Probar Warning
+                </button>
+                
+                <button class="btn btn-info me-2 mb-2" onclick="testInfo()">
+                    <i class="fas fa-info-circle"></i> Probar Info
+                </button>
+                
+                <button class="btn btn-primary me-2 mb-2" onclick="testPrimary()">
+                    <i class="fas fa-bell"></i> Probar Primary
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Escenarios Reales</h5>
+        </div>
+        <div class="card-body">
+            <p>Simulación de escenarios reales de la aplicación:</p>
+            
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-success" onclick="testLoginSuccess()">
+                    Login Exitoso
+                </button>
+                
+                <button class="btn btn-outline-danger" onclick="testLoginError()">
+                    Error de Login
+                </button>
+                
+                <button class="btn btn-outline-success" onclick="testSaveAeronave()">
+                    Aeronave Guardada
+                </button>
+                
+                <button class="btn btn-outline-danger" onclick="testDeleteVuelo()">
+                    Vuelo Eliminado
+                </button>
+                
+                <button class="btn btn-outline-warning" onclick="testPermisos()">
+                    Acceso Denegado
+                </button>
+                
+                <button class="btn btn-outline-info" onclick="testValidacion()">
+                    Validación de Formulario
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Múltiples Notificaciones</h5>
+        </div>
+        <div class="card-body">
+            <button class="btn btn-outline-primary" onclick="testMultiple()">
+                <i class="fas fa-layer-group"></i> Mostrar Varias Notificaciones
+            </button>
+            <p class="text-muted mt-2 mb-0">
+                <small>Muestra varias notificaciones simultáneamente para ver cómo se apilan</small>
+            </p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Personalizado</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="customMessage" class="form-label">Mensaje</label>
+                    <input type="text" class="form-control" id="customMessage" 
+                           placeholder="Escribe tu mensaje aquí" 
+                           value="Este es un mensaje personalizado">
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="customType" class="form-label">Tipo</label>
+                    <select class="form-select" id="customType">
+                        <option value="success">Success</option>
+                        <option value="danger">Danger</option>
+                        <option value="warning">Warning</option>
+                        <option value="info" selected>Info</option>
+                        <option value="primary">Primary</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="customDuration" class="form-label">Duración (ms)</label>
+                    <input type="number" class="form-control" id="customDuration" 
+                           value="5000" min="0" step="1000">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="testCustom()">
+                <i class="fas fa-paper-plane"></i> Enviar Notificación
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones de prueba por tipo
+function testSuccess() {
+    showNotification('✅ Operación completada exitosamente', 'success');
+}
+
+function testError() {
+    showNotification('❌ Error: No se pudo completar la operación', 'danger');
+}
+
+function testWarning() {
+    showNotification('⚠️ Advertencia: Verifica los datos antes de continuar', 'warning');
+}
+
+function testInfo() {
+    showNotification('ℹ️ Información: Este es un mensaje informativo', 'info');
+}
+
+function testPrimary() {
+    showNotification('🔔 Notificación: Tienes nuevas actualizaciones disponibles', 'primary');
+}
+
+// Escenarios reales
+function testLoginSuccess() {
+    showNotification('¡Bienvenido! Has iniciado sesión correctamente', 'success');
+}
+
+function testLoginError() {
+    showNotification('❌ Usuario o contraseña incorrectos. Por favor verifica tus credenciales.', 'danger');
+}
+
+function testSaveAeronave() {
+    showNotification('Aeronave "Boeing 737 (XA-ABC)" guardada exitosamente', 'success');
+}
+
+function testDeleteVuelo() {
+    showNotification('Vuelo #12345 eliminado correctamente', 'success');
+}
+
+function testPermisos() {
+    showNotification('🚫 Acceso Denegado: No tienes permisos para realizar esta acción', 'warning');
+}
+
+function testValidacion() {
+    showNotification('Por favor complete los campos requeridos correctamente', 'warning');
+}
+
+// Múltiples notificaciones
+function testMultiple() {
+    showNotification('Primera notificación - Éxito', 'success');
+    
+    setTimeout(function() {
+        showNotification('Segunda notificación - Información', 'info');
+    }, 500);
+    
+    setTimeout(function() {
+        showNotification('Tercera notificación - Advertencia', 'warning');
+    }, 1000);
+    
+    setTimeout(function() {
+        showNotification('Cuarta notificación - Error', 'danger');
+    }, 1500);
+}
+
+// Notificación personalizada
+function testCustom() {
+    var message = document.getElementById('customMessage').value;
+    var type = document.getElementById('customType').value;
+    var duration = parseInt(document.getElementById('customDuration').value);
+    
+    if (!message) {
+        showNotification('Por favor escribe un mensaje', 'warning');
+        return;
+    }
+    
+    showNotification(message, type, duration);
+}
+</script>
+{% endblock %}
