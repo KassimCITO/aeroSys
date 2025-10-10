@@ -1,3 +1,9 @@
+title: "Guia de Instalación Detallada - aeroSys"
+author: "KassimCITO"
+email: "kassimcito@gmail.com"
+website: "https://github.com/KassimCITO/aeroSys"
+date: "2025-10-09"
+
 # Guía de Instalación Detallada - Sistema de Gestión de Aeropuertos
 
 ## Tabla de Contenidos
