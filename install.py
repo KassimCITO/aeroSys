@@ -103,6 +103,38 @@ def install_dependencies():
         print(f"   Error: {e}")
         return False
 
+def verify_project_structure():
+    """Verifica que la estructura del proyecto sea correcta"""
+    print("🔍 Verificando estructura del proyecto...")
+    
+    required_dirs = ['templates', 'static', 'static/js', 'static/css', 'auth', 'routes']
+    required_files = [
+        'app.py', 'api.py', 'models.py', 'config.py', 'reports.py',
+        'static/js/vuelos_confirmacion.js'
+    ]
+    
+    missing_items = []
+    
+    # Verificar directorios
+    for directory in required_dirs:
+        if not Path(directory).exists():
+            missing_items.append(f"Directorio: {directory}")
+    
+    # Verificar archivos
+    for file in required_files:
+        if not Path(file).exists():
+            missing_items.append(f"Archivo: {file}")
+    
+    if missing_items:
+        print("⚠️  Advertencia: Faltan algunos archivos/directorios:")
+        for item in missing_items:
+            print(f"   - {item}")
+        print("   El sistema puede no funcionar correctamente")
+        return False
+    
+    print("✅ Estructura del proyecto verificada")
+    return True
+
 def setup_database():
     """Configura la base de datos"""
     print("🗄️  Configurando base de datos...")
@@ -122,6 +154,9 @@ def setup_database():
         subprocess.run([python_exe, "seed.py"], check=True, capture_output=True)
         print("✅ Base de datos configurada exitosamente")
         print("   Se crearon 5 registros por tabla con datos de ejemplo")
+        print("   ✓ Aeronaves, Pilotos, Vuelos")
+        print("   ✓ Confirmaciones (automáticas)")
+        print("   ✓ Usuarios con diferentes roles")
         return True
     except subprocess.CalledProcessError as e:
         print("❌ Error al configurar base de datos")
@@ -223,10 +258,18 @@ def show_final_instructions():
     print("   - Manual de Usuario: Manual_de_Usuario.md")
     print("   - Guía de Instalación: Guia_Instalacion_Detallada.md")
     print("   - Diagramas del Sistema: Diagramas_Sistema.md")
+    print("   - Resumen de Limpieza: RESUMEN_LIMPIEZA.md")
     print()
     print("🔧 CONFIGURACIÓN:")
     print("   - Archivo de ejemplo: config.env.example")
     print("   - Copia a .env y modifica según necesites")
+    print()
+    print("✨ CARACTERÍSTICAS PRINCIPALES:")
+    print("   - Gestión de Aeronaves, Pilotos y Vuelos")
+    print("   - Sistema de Confirmaciones Automáticas")
+    print("   - Control de Acceso por Roles")
+    print("   - Generación de Reportes PDF/Excel")
+    print("   - Interfaz Responsiva y Moderna")
     print()
     print("=" * 60)
 
@@ -249,6 +292,7 @@ def main():
     
     # Proceso de instalación
     steps = [
+        ("Verificando estructura del proyecto", verify_project_structure),
         ("Creando entorno virtual", create_virtual_environment),
         ("Instalando dependencias", install_dependencies),
         ("Configurando base de datos", setup_database),

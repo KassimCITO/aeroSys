@@ -57,6 +57,7 @@ El Sistema de Gestión de Aeropuertos es una aplicación web desarrollada en Fla
 2. Activa el entorno virtual:
    - Windows: `venv\Scripts\activate`
    - Linux/Mac: `source venv/bin/activate`
+   - 2 Linux/Mac: `source venv/Scripts/activate`
 
 3. Instala las dependencias:
    ```bash

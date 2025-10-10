@@ -121,40 +121,42 @@ def seed_data():
         db.session.commit()
 
         # ===========================================
-        # CONFIRMACIONES (5 registros)
+        # CONFIRMACIONES (5 registros - una por cada vuelo)
         # ===========================================
         print("🎫 Creando confirmaciones...")
+        # Nota: En producción, las confirmaciones se crean automáticamente
+        # al crear un vuelo. Aquí las creamos manualmente para datos de ejemplo.
         confirmaciones = [
             Confirmacion(
                 vuelo_id=vuelos[0].vuelo_id,
                 estado='Confirmado',
-                notas='Pasajero VIP, asiento preferencial'
+                notas='Vuelo confirmado - Pasajero VIP, asiento preferencial'
             ),
             Confirmacion(
                 vuelo_id=vuelos[1].vuelo_id,
                 estado='Pendiente',
-                notas='Esperando confirmación de equipaje'
+                notas='Esperando confirmación de equipaje especial'
             ),
             Confirmacion(
                 vuelo_id=vuelos[2].vuelo_id,
                 estado='Confirmado',
-                notas='Check-in completado'
+                notas='Check-in completado - Sin observaciones'
             ),
             Confirmacion(
                 vuelo_id=vuelos[3].vuelo_id,
                 estado='Confirmado',
-                notas='Vuelo internacional, documentación verificada'
+                notas='Vuelo internacional - Documentación verificada y aprobada'
             ),
             Confirmacion(
                 vuelo_id=vuelos[4].vuelo_id,
                 estado='Cancelado',
-                notas='Cancelado por condiciones climáticas'
+                notas='Cancelado por condiciones climáticas adversas en destino'
             )
         ]
         db.session.add_all(confirmaciones)
 
         # ===========================================
-        # USUARIOS (5 registros)
+        # USUARIOS (5 registros con diferentes roles)
         # ===========================================
         print("👥 Creando usuarios...")
         

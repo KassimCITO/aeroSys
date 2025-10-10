@@ -273,6 +273,35 @@ def confirmaciones():
     db.session.add(c); db.session.commit()
     return jsonify({'msg':'ok','id':c.confirmacion_id}),201
 
+@api_bp.route('/confirmaciones/<int:id>', methods=['GET','PUT','DELETE'])
+@login_required
+def confirmacion_item(id):
+    c = Confirmacion.query.get_or_404(id)
+    if request.method == 'GET':
+        return jsonify({
+            'confirmacion_id': c.confirmacion_id,
+            'vuelo_id': c.vuelo_id,
+            'estado': c.estado,
+            'notas': c.notas,
+            'created_at': c.created_at.isoformat() if c.created_at else None
+        })
+    if request.method == 'PUT':
+        # Verificar permisos
+        if current_user.rol in ['piloto', 'invitado']:
+            return jsonify({'msg':'🚫 Acceso Denegado: Solo operadores autorizados pueden modificar confirmaciones'}), 403
+        
+        data = request.json or {}
+        c.estado = data.get('estado', c.estado)
+        c.notas = data.get('notas', c.notas)
+        db.session.commit()
+        return jsonify({'msg':'updated'})
+    
+    # DELETE
+    if current_user.rol in ['piloto', 'invitado']:
+        return jsonify({'msg':'🚫 Acceso Denegado: Solo operadores autorizados pueden eliminar confirmaciones'}), 403
+    db.session.delete(c)
+    db.session.commit()
+    return jsonify({'msg':'deleted'})
 
 # Usuarios (minimal)
 @api_bp.route('/usuarios', methods=['GET','POST'])

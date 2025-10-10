@@ -2,16 +2,19 @@
 
 Un sistema web completo desarrollado en Flask para la gestión integral de operaciones aeroportuarias, incluyendo aeronaves, pilotos, vuelos, confirmaciones y reportes detallados.
 
+**Versión**: 1.1.0 | **Estado**: Producción ✅
+
 ## 🚀 Características Principales
 
 - ✅ **Dashboard Interactivo** con estadísticas en tiempo real
 - ✅ **Gestión Completa** de aeronaves, pilotos, vuelos y confirmaciones
+- ✅ **Confirmaciones Automáticas** al crear vuelos (NUEVO ⭐)
 - ✅ **Sistema de Reportes** en PDF y Excel con filtros avanzados
 - ✅ **Configuración del Aeropuerto** personalizable
 - ✅ **Gestión de Usuarios** con diferentes roles y permisos
+- ✅ **Control de Acceso por Roles** (Admin, Operador, Piloto, Invitado)
 - ✅ **Tema Claro/Oscuro** adaptable
 - ✅ **Footer Informativo** siempre visible
-- ✅ **Sistema de Confirmación** de vuelos para operadores
 - ✅ **Interfaz Responsiva** para todos los dispositivos
 
 ## 📋 Requisitos del Sistema

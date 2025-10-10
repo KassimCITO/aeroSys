@@ -235,10 +235,16 @@ function saveVuelo() {
         return response.json();
     })
     .then(data => {
-        // Hide form and refresh table immediately
-        hideForm();
-        fetchVuelos();
-        showMessage(vuelo_id ? 'Vuelo actualizado exitosamente' : 'Vuelo creado exitosamente', 'success');
+        // Si es un nuevo vuelo (POST), crear confirmación automáticamente
+        if (!vuelo_id && data.id) {
+            // Crear confirmación con valores por defecto
+            return crearConfirmacionAutomatica(data.id, payload);
+        } else {
+            // Si es actualización, solo mostrar mensaje y refrescar
+            hideForm();
+            fetchVuelos();
+            showMessage('Vuelo actualizado exitosamente', 'success');
+        }
     })
     .catch(error => {
         showMessage('Error: ' + error.message, 'danger');
@@ -246,6 +252,47 @@ function saveVuelo() {
     });
 
     return false;
+}
+
+// Función para crear confirmación automáticamente después de crear un vuelo
+function crearConfirmacionAutomatica(vueloId, vueloData) {
+    var confirmacionPayload = {
+        vuelo_id: vueloId,
+        estado: 'Pendiente',
+        notas: 'Confirmación creada automáticamente'
+    };
+    
+    return fetch('/api/confirmaciones', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(confirmacionPayload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+    })
+    .then(confirmacionData => {
+        // Ocultar formulario y refrescar tabla
+        hideForm();
+        fetchVuelos();
+        
+        // Mostrar mensaje de éxito
+        showMessage('Vuelo y confirmación creados exitosamente', 'success');
+        
+        // Abrir modal de confirmación para que el usuario pueda revisar/editar
+        abrirModalConfirmacionNueva(vueloId, vueloData, confirmacionData);
+    })
+    .catch(error => {
+        // Si falla la confirmación, mostrar advertencia pero el vuelo ya fue creado
+        showMessage('Vuelo creado, pero hubo un error al crear la confirmación: ' + error.message, 'warning');
+        hideForm();
+        fetchVuelos();
+    });
 }
 
 function editV(id) {
@@ -442,10 +489,13 @@ function confirmarVuelo(vueloId) {
                 '<div class="col-md-6"><strong>Aeronave:</strong><br>' + (aeronave ? aeronave.matricula + ' - ' + aeronave.modelo : 'N/A') + '</div>' +
                 '<div class="col-md-6"><strong>Piloto:</strong><br>' + (piloto ? piloto.nombre + ' (' + piloto.licencia + ')' : 'N/A') + '</div>' +
                 '</div>';
-            
+
             // Limpiar formulario
             document.getElementById('estado_confirmacion').value = '';
             document.getElementById('notas_confirmacion').value = '';
+            
+            // Limpiar atributo de confirmación existente
+            document.getElementById('vuelo_id_confirmar').removeAttribute('data-confirmacion-id');
             
             // Mostrar modal
             var modal = new bootstrap.Modal(document.getElementById('confirmarVueloModal'));
@@ -461,6 +511,7 @@ function guardarConfirmacion() {
     var vueloId = document.getElementById('vuelo_id_confirmar').value;
     var estado = document.getElementById('estado_confirmacion').value;
     var notas = document.getElementById('notas_confirmacion').value;
+    var confirmacionId = document.getElementById('vuelo_id_confirmar').getAttribute('data-confirmacion-id');
     
     if (!estado) {
         showMessage('Por favor seleccione un estado de confirmación', 'warning');
@@ -472,9 +523,13 @@ function guardarConfirmacion() {
         estado: estado,
         notas: notas
     };
-    
-    fetch('/api/confirmaciones', {
-        method: 'POST',
+
+    // Si ya existe una confirmación, actualizarla; si no, crear una nueva
+    var method = confirmacionId ? 'PUT' : 'POST';
+    var url = confirmacionId ? '/api/confirmaciones/' + confirmacionId : '/api/confirmaciones';
+
+    fetch(url, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -1129,4 +1184,5 @@ function hideFormWithTransition(formId) {
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/vuelos_confirmacion.js') }}"></script>
 {% endblock %}
