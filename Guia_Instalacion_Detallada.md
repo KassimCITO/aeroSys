@@ -2,40 +2,171 @@ title: "Guia de Instalación Detallada - aeroSys"
 author: "KassimCITO"
 email: "kassimcito@gmail.com"
 website: "https://github.com/KassimCITO/aeroSys"
-date: "2025-10-09"
+date: "2025-10-10"
+version: "1.1.0"
 
 # Guía de Instalación Detallada - Sistema de Gestión de Aeropuertos
 
 ## Tabla de Contenidos
 1. [Introducción](#introducción)
-2. [Requisitos del Sistema](#requisitos-del-sistema)
-3. [Instalación en Windows](#instalación-en-windows)
-4. [Instalación en Linux](#instalación-en-linux)
-5. [Instalación en macOS](#instalación-en-macos)
-6. [Configuración de Base de Datos](#configuración-de-base-de-datos)
-7. [Configuración de Producción](#configuración-de-producción)
-8. [Solución de Problemas](#solución-de-problemas)
-9. [Mantenimiento](#mantenimiento)
+2. [Novedades Versión 1.1.0](#novedades-versión-110)
+3. [Requisitos del Sistema](#requisitos-del-sistema)
+4. [Entendiendo los Entornos de Consola](#entendiendo-los-entornos-de-consola)
+5. [Instalación en Windows](#instalación-en-windows)
+6. [Instalación en Linux](#instalación-en-linux)
+7. [Instalación en macOS](#instalación-en-macos)
+8. [Configuración de Base de Datos](#configuración-de-base-de-datos)
+9. [Configuración de Producción](#configuración-de-producción)
+10. [Solución de Problemas](#solución-de-problemas)
+11. [Mantenimiento](#mantenimiento)
 
 ## Introducción
 
 Esta guía proporciona instrucciones detalladas para instalar y configurar el Sistema de Gestión de Aeropuertos en diferentes sistemas operativos y entornos.
 
+**Versión del Sistema:** 1.1.0  
+**Estado:** Producción ✅  
+**Última Actualización:** 10 de Octubre de 2025
+
+## Novedades Versión 1.1.0
+
+### ✨ Nuevas Características
+
+- **Sistema de Confirmaciones Automáticas**: Al crear un vuelo, se genera automáticamente un registro de confirmación
+- **Modal Interactivo**: Permite editar confirmaciones inmediatamente después de crear un vuelo
+- **API REST Mejorada**: Nuevo endpoint PUT para actualizar confirmaciones
+- **Control de Acceso Mejorado**: Validación de permisos por roles (Admin, Operador, Piloto, Invitado)
+- **Archivo JavaScript Modular**: `static/js/vuelos_confirmacion.js` con funciones reutilizables
+
+### 🔧 Mejoras Técnicas
+
+- Verificación automática de estructura del proyecto en `install.py`
+- Datos de ejemplo mejorados en `seed.py`
+- Documentación completa actualizada
+- Proyecto optimizado (~675 KB de archivos innecesarios eliminados)
+
+### 📚 Nueva Documentación
+
+- `CHANGELOG.md` - Registro de cambios
+- `RESUMEN_ACTUALIZACION.md` - Detalles técnicos
+- `MANTENIMIENTO.md` - Guía de mantenimiento
+- `RESUMEN_LIMPIEZA.md` - Limpieza del proyecto
+- `LEEME_PRIMERO.txt` - Guía rápida de inicio
+
 ## Requisitos del Sistema
 
 ### Requisitos Mínimos
 - **Sistema Operativo:** Windows 10, Ubuntu 18.04+, macOS 10.14+
-- **Python:** 3.8 o superior
-- **RAM:** 4GB mínimo, 8GB recomendado
-- **Espacio en Disco:** 2GB libres
+- **Python:** 3.8 o superior (3.9+ recomendado)
+- **RAM:** 2GB mínimo, 4GB recomendado
+- **Espacio en Disco:** 500MB libres
 - **Navegador:** Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **Git:** Para clonar el repositorio (opcional)
 
 ### Requisitos Recomendados
-- **Sistema Operativo:** Windows 11, Ubuntu 20.04+, macOS 12+
-- **Python:** 3.9 o superior
+- **Sistema Operativo:** Windows 11, Ubuntu 22.04+, macOS 13+
+- **Python:** 3.10 o superior
 - **RAM:** 8GB o más
-- **Espacio en Disco:** 5GB libres
+- **Espacio en Disco:** 2GB libres
 - **Procesador:** 4 núcleos o más
+- **Conexión a Internet:** Para descargar dependencias
+
+## Entendiendo los Entornos de Consola
+
+### 🖥️ Diferencias entre Sistemas Operativos
+
+El comando para activar el entorno virtual varía según tu sistema operativo y el tipo de consola que uses:
+
+#### Windows
+
+**1. Command Prompt (CMD)**
+```cmd
+venv\Scripts\activate
+```
+- Usa barras invertidas `\`
+- Ejecuta `activate.bat`
+- Consola tradicional de Windows
+
+**2. PowerShell**
+```powershell
+venv\Scripts\Activate.ps1
+```
+- Usa barras invertidas `\`
+- Ejecuta script `.ps1`
+- Puede requerir cambiar política de ejecución:
+  ```powershell
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+
+**3. Git Bash (Windows con Git instalado)**
+```bash
+source venv/Scripts/activate
+```
+- ⭐ **IMPORTANTE**: Usa `Scripts` (con 'S' mayúscula)
+- Usa barras normales `/` (estilo Unix)
+- Usa comando `source` (estilo Unix)
+- **Esta es la consola que estás usando actualmente**
+
+#### Linux / macOS
+
+**Bash / Zsh / Terminal**
+```bash
+source venv/bin/activate
+```
+- Usa `bin` (no `Scripts`)
+- Usa barras normales `/`
+- Usa comando `source`
+
+### 📋 Tabla Comparativa
+
+| Sistema Operativo | Consola | Comando de Activación |
+|-------------------|---------|----------------------|
+| Windows | CMD | `venv\Scripts\activate` |
+| Windows | PowerShell | `venv\Scripts\Activate.ps1` |
+| Windows | Git Bash | `source venv/Scripts/activate` ⭐ |
+| Linux | Bash/Zsh | `source venv/bin/activate` |
+| macOS | Terminal | `source venv/bin/activate` |
+
+### 🔍 Cómo Identificar tu Consola
+
+**Git Bash en Windows:**
+- El prompt muestra algo como: `user@HOSTNAME MINGW64 ~/path`
+- Tiene colores en el prompt
+- Soporta comandos Unix como `ls`, `pwd`, `grep`
+
+**CMD en Windows:**
+- El prompt muestra: `C:\Users\Usuario>`
+- Sin colores por defecto
+- Usa comandos Windows como `dir`, `cd`
+
+**PowerShell en Windows:**
+- El prompt muestra: `PS C:\Users\Usuario>`
+- Fondo azul por defecto
+- Soporta cmdlets como `Get-ChildItem`
+
+**Terminal en Linux/macOS:**
+- El prompt muestra: `user@hostname:~$`
+- Soporta comandos Unix nativamente
+
+### ⚠️ Nota Importante para Git Bash en Windows
+
+Si estás usando **Git Bash en Windows** (como parece ser tu caso), debes usar:
+
+```bash
+# Crear entorno virtual
+python -m venv venv
+
+# Activar entorno virtual
+source venv/Scripts/activate  # ← Nota: Scripts con 'S' mayúscula
+
+# Desactivar entorno virtual
+deactivate
+```
+
+**¿Por qué `Scripts` y no `bin`?**
+- En Windows, Python crea la carpeta `Scripts`
+- Git Bash emula un entorno Unix en Windows
+- Por eso usas `source` (comando Unix) pero con `Scripts` (estructura Windows)
 
 ## Instalación en Windows
 
@@ -367,7 +498,7 @@ La aplicación usa SQLite por defecto para desarrollo. No requiere configuració
    WantedBy=multi-user.target
    ```
 
-3. Habilita y inicia el servicio:
+3. Habilita e inicia el servicio:
    ```bash
    sudo systemctl enable aerosys
    sudo systemctl start aerosys
@@ -450,12 +581,41 @@ La aplicación usa SQLite por defecto para desarrollo. No requiere configuració
 - Verifica el espacio en disco regularmente
 
 ### Limpieza
-- Limpia archivos temporales regularmente
+- Limpia archivos temporales regularmente:
+  ```bash
+  # Usar script de limpieza
+  ./limpiar_proyecto.sh  # Linux/Mac
+  limpiar_proyecto.bat   # Windows
+  ```
 - Elimina logs antiguos
-- Optimiza la base de datos periódicamente
+- Optimiza la base de datos periódicamente:
+  ```bash
+  # SQLite
+  sqlite3 aeropuertos.db "VACUUM;"
+  ```
+
+### Recursos Adicionales
+
+Para más información, consulta:
+
+- **CHANGELOG.md** - Registro completo de cambios
+- **MANTENIMIENTO.md** - Guía detallada de mantenimiento
+- **RESUMEN_LIMPIEZA.md** - Limpieza del proyecto
+- **LEEME_PRIMERO.txt** - Guía rápida de inicio
+- **Manual_de_Usuario.md** - Manual completo del usuario
+
+### Soporte
+
+Si encuentras problemas:
+
+1. Revisa la sección [Solución de Problemas](#solución-de-problemas)
+2. Consulta `MANTENIMIENTO.md` para tareas comunes
+3. Verifica los logs de la aplicación
+4. Revisa el repositorio en GitHub: https://github.com/KassimCITO/aeroSys
 
 ---
 
-**Versión de la Guía:** 1.0  
-**Última Actualización:** Octubre 2025  
-**Sistema:** Sistema de Gestión de Aeropuertos v1.0
+**Versión de la Guía:** 1.1.0  
+**Última Actualización:** 10 de Octubre de 2025  
+**Sistema:** Sistema de Gestión de Aeropuertos v1.1.0  
+**Estado:** Producción ✅
