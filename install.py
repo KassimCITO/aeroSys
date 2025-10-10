@@ -214,9 +214,9 @@ HOST=0.0.0.0
 PORT=5000
 
 # Configuración del aeropuerto (valores por defecto)
-AIRPORT_NAME=Mi Aeropuerto
-AIRPORT_CITY=Ciudad
-AIRPORT_STATE=Estado
+AIRPORT_NAME=Aeropuerto de la ciudad de Apatzingán
+AIRPORT_CITY=Apatzingán
+AIRPORT_STATE=Michoacán
 AIRPORT_COUNTRY=México
 """
     

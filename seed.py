@@ -15,19 +15,19 @@ def seed_data():
         # ===========================================
         print("✈️  Creando configuración del aeropuerto...")
         config = ConfiguracionAeropuerto(
-            nombre='Aeropuerto Internacional de la Ciudad',
+            nombre='Aeropuerto de la ciudad de Apatzingán',
             codigo_iata='CIT',
             codigo_icao='MCIT',
-            director='Dr. Carlos Mendez',
-            direccion='Carretera Federal 123, Km 15',
-            codigo_postal='12345',
-            municipio='Ciudad de México',
-            ciudad='Ciudad de México',
-            estado='CDMX',
+            director='Cte. Miguel Estrada García',
+            direccion='Av. Morelos Pte. 3333, Km.1.5',
+            codigo_postal='60600',
+            municipio='Apatzingán',
+            ciudad='Apatzingán de la Constitución',
+            estado='Michoacán',
             pais='México',
-            telefono='+52 (55) 1234-5678',
-            email='info@aeropuerto-cit.com',
-            sitio_web='https://www.aeropuerto-cit.com'
+            telefono='+52 (453) 101.5588',
+            email='juan_colorado@outlook.com',
+            sitio_web='https://github.com/KassimCITO/aeroSys'
         )
         db.session.add(config)
 

@@ -1,3 +1,4 @@
+# Tíulo y metadatos
 title: "Guia de Instalación Detallada - aeroSys"
 author: "KassimCITO"
 email: "kassimcito@gmail.com"
