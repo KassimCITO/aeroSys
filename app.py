@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, sen
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from config import Config
-from models import db, Usuario
+from models import db, Usuario, ConfiguracionAeropuerto
 
 # Inicialización de Flask
 app = Flask(__name__)
@@ -52,5 +52,29 @@ if __name__ == '__main__':
                 print('Usuario admin creado: admin/123456')
         except Exception as e:
             print(f'Error al inicializar la base de datos: {e}')
+        # Creación de datos iniciales del aeropuerto...
+        try:
+            config = ConfiguracionAeropuerto.query.first()
+            if not config:
+                config = ConfiguracionAeropuerto(
+                    nombre='Aeropuerto de la ciudad de Apatzingán',
+                    codigo_iata='CIT',
+                    codigo_icao='MCIT',
+                    director='Cte. Miguel Estrada García',
+                    direccion='Av. Morelos Pte. 3333, Km.1.5',
+                    codigo_postal='60600',
+                    municipio='Apatzingán',
+                    ciudad='Apatzingán de la Constitución',
+                    estado='Michoacán',
+                    pais='México',
+                    telefono='+52 (453) 101.5588',
+                    email='juan_colorado@outlook.com',
+                    sitio_web='https://github.com/KassimCITO/aeroSys'
+                )
+                db.session.add(config)
+                db.session.commit()
+                print('Configuración del aeropuerto creada')
+        except Exception as e:
+            print(f'Error al inicializar la configuración del aeropuerto: {e}')
 
     app.run(host='0.0.0.0', port=5000, debug=True)
