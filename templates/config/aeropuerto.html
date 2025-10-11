@@ -1,9 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Configuración del Aeropuerto{% endblock %}
 
+{% block head %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Detectar si se guardó exitosamente (buscar mensaje de éxito)
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert) {
+        // Forzar recarga de configuración en todas las ventanas/pestañas abiertas
+        if (window.reloadAirportConfig) {
+            window.reloadAirportConfig();
+        }
+        
+        // Notificar a otras pestañas usando localStorage
+        localStorage.setItem('airport-config-updated', Date.now().toString());
+    }
+});
+
+// Escuchar cambios en localStorage para actualizar en otras pestañas
+window.addEventListener('storage', function(e) {
+    if (e.key === 'airport-config-updated' && window.reloadAirportConfig) {
+        window.reloadAirportConfig();
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <h3 class="my-4">Configuración del Aeropuerto</h3>
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h3 class="mb-0">Configuración del Aeropuerto</h3>
+        <button type="button" class="btn btn-success" onclick="mostrarModalNuevoAeropuerto()">
+            <i class="fas fa-plus"></i> Nuevo Aeropuerto
+        </button>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -15,6 +45,36 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+
+    <!-- Lista de Aeropuertos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Aeropuertos Registrados</h5>
+        </div>
+        <div class="card-body">
+            <div id="aeropuertos-list" class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Ciudad</th>
+                            <th>Estado</th>
+                            <th>Código IATA</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aeropuertos-tbody">
+                        <tr>
+                            <td colspan="6" class="text-center">Cargando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Edición del Aeropuerto Actual -->
 
     <div class="card">
         <div class="card-body">
@@ -112,4 +172,173 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Nuevo Aeropuerto -->
+<div class="modal fade" id="modalNuevoAeropuerto" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Aeropuerto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoAeropuerto">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Aeropuerto *</label>
+                            <input type="text" class="form-control" id="nuevo_nombre" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Código IATA</label>
+                            <input type="text" class="form-control" id="nuevo_codigo_iata" maxlength="3">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Código ICAO</label>
+                            <input type="text" class="form-control" id="nuevo_codigo_icao" maxlength="4">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Ciudad</label>
+                            <input type="text" class="form-control" id="nuevo_ciudad">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Estado</label>
+                            <input type="text" class="form-control" id="nuevo_estado">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">País</label>
+                            <input type="text" class="form-control" id="nuevo_pais" value="México">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarNuevoAeropuerto()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar lista de aeropuertos
+function cargarAeropuertos() {
+    fetch('/api/aeropuertos')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('aeropuertos-tbody');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay aeropuertos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(a => `
+                <tr>
+                    <td>${a.nombre}</td>
+                    <td>${a.ciudad || '-'}</td>
+                    <td>${a.estado || '-'}</td>
+                    <td>${a.codigo_iata || '-'}</td>
+                    <td>
+                        ${a.activo ? 
+                            '<span class="badge bg-success">Activo</span>' : 
+                            '<span class="badge bg-secondary">Inactivo</span>'}
+                    </td>
+                    <td>
+                        ${!a.activo ? 
+                            `<button class="btn btn-sm btn-primary" onclick="activarAeropuerto(${a.id})">
+                                <i class="fas fa-check"></i> Activar
+                            </button>` : 
+                            '<span class="text-muted">En uso</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error al cargar aeropuertos:', error);
+            showNotification('Error al cargar la lista de aeropuertos', 'danger');
+        });
+}
+
+// Mostrar modal para nuevo aeropuerto
+function mostrarModalNuevoAeropuerto() {
+    const modal = new bootstrap.Modal(document.getElementById('modalNuevoAeropuerto'));
+    document.getElementById('formNuevoAeropuerto').reset();
+    modal.show();
+}
+
+// Guardar nuevo aeropuerto
+function guardarNuevoAeropuerto() {
+    const data = {
+        nombre: document.getElementById('nuevo_nombre').value.trim(),
+        codigo_iata: document.getElementById('nuevo_codigo_iata').value.trim(),
+        codigo_icao: document.getElementById('nuevo_codigo_icao').value.trim(),
+        ciudad: document.getElementById('nuevo_ciudad').value.trim(),
+        estado: document.getElementById('nuevo_estado').value.trim(),
+        pais: document.getElementById('nuevo_pais').value.trim()
+    };
+    
+    if (!data.nombre) {
+        showNotification('El nombre del aeropuerto es obligatorio', 'warning');
+        return;
+    }
+    
+    fetch('/api/aeropuertos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.msg === 'ok') {
+            showNotification('Aeropuerto creado exitosamente', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevoAeropuerto')).hide();
+            cargarAeropuertos();
+        } else {
+            showNotification(result.msg || 'Error al crear aeropuerto', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al crear aeropuerto', 'danger');
+    });
+}
+
+// Activar aeropuerto
+function activarAeropuerto(id) {
+    if (!confirm('¿Desea activar este aeropuerto? El aeropuerto activo actual será desactivado.')) {
+        return;
+    }
+    
+    fetch(`/api/aeropuertos/${id}/activar`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(result => {
+        showNotification(result.msg || 'Aeropuerto activado exitosamente', 'success');
+        cargarAeropuertos();
+        
+        // Recargar configuración en el statusbar
+        if (window.reloadAirportConfig) {
+            window.reloadAirportConfig();
+        }
+        localStorage.setItem('airport-config-updated', Date.now().toString());
+        
+        // Recargar la página para actualizar el formulario
+        setTimeout(() => location.reload(), 1500);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al activar aeropuerto', 'danger');
+    });
+}
+
+// Cargar aeropuertos al iniciar
+document.addEventListener('DOMContentLoaded', function() {
+    cargarAeropuertos();
+});
+</script>
 {% endblock %}

@@ -10,10 +10,17 @@ def configuracion_aeropuerto():
         flash('Acceso denegado. Se requieren permisos de administrador.', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    config = ConfiguracionAeropuerto.query.first()
+    # Obtener el aeropuerto activo
+    config = ConfiguracionAeropuerto.query.filter_by(activo=True).first()
     if not config:
+        # Si no hay activo, tomar el primero
+        config = ConfiguracionAeropuerto.query.first()
+    
+    if not config:
+        # Crear configuración por defecto si no existe
         config = ConfiguracionAeropuerto(
-            nombre='Mi Aeropuerto'
+            nombre='Mi Aeropuerto',
+            activo=True
         )
         db.session.add(config)
         db.session.commit()

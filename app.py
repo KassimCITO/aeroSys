@@ -6,7 +6,6 @@ from models import db, Usuario, ConfiguracionAeropuerto
 
 # Inicialización de Flask
 app = Flask(__name__)
-app.secret_key = '7f8e2d5301ff8133b1b26117299c5c7c1c11544990ddf0e4ea1398d8cfe53ff9'
 app.config.from_object(Config)
 
 # Inicializar extensiones

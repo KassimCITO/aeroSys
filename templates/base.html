@@ -408,27 +408,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeSwitch = document.getElementById('themeSwitch');
     const html = document.documentElement;
     
-    // Verificar tema guardado
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    html.setAttribute('data-bs-theme', savedTheme);
-    themeSwitch.checked = savedTheme === 'dark';
-    
-    themeSwitch.addEventListener('change', () => {
-        // Prevenir múltiples clics
-        themeSwitch.disabled = true;
+    // Configurar tema solo si el switch existe (usuario autenticado)
+    if (themeSwitch) {
+        // Verificar tema guardado
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-bs-theme', savedTheme);
+        themeSwitch.checked = savedTheme === 'dark';
         
-        const newTheme = themeSwitch.checked ? 'dark' : 'light';
-        html.setAttribute('data-bs-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        // Habilitar el switch después de la transición
-        setTimeout(() => {
-            themeSwitch.disabled = false;
-        }, 500);
-    });
+        themeSwitch.addEventListener('change', () => {
+            // Prevenir múltiples clics
+            themeSwitch.disabled = true;
+            
+            const newTheme = themeSwitch.checked ? 'dark' : 'light';
+            html.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Habilitar el switch después de la transición
+            setTimeout(() => {
+                themeSwitch.disabled = false;
+            }, 500);
+        });
+    } else {
+        // Si no hay switch, aplicar tema guardado de todas formas
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-bs-theme', savedTheme);
+    }
     
-    // Cargar datos de configuración del aeropuerto
+    // Cargar datos de configuración del aeropuerto (siempre, incluso en login)
     loadAirportConfig();
+    
+    // Iniciar polling automático para actualización en tiempo real
+    startConfigPolling();
     
     // Renderizar mensajes flash
     renderFlashMessages();
@@ -591,10 +601,26 @@ function hideFormWithTransition(formId, callback) {
 
 
 
+// Variable global para almacenar el último hash de configuración
+let lastConfigHash = null;
+
 function loadAirportConfig() {
     fetch('/api/configuracion-aeropuerto')
         .then(response => response.json())
         .then(data => {
+            // Calcular hash simple de la configuración
+            const configString = JSON.stringify(data);
+            const currentHash = simpleHash(configString);
+            
+            // Solo actualizar si hay cambios
+            if (lastConfigHash !== null && lastConfigHash !== currentHash) {
+                console.log('Configuración del aeropuerto actualizada');
+                showNotification('✅ Configuración del aeropuerto actualizada', 'success', 3000);
+            }
+            
+            lastConfigHash = currentHash;
+            
+            // Actualizar elementos del DOM
             document.getElementById('aeropuerto-nombre').textContent = data.nombre || 'Aeropuerto';
             document.getElementById('aeropuerto-ciudad').textContent = data.ciudad || 'Ciudad';
             document.getElementById('aeropuerto-municipio').textContent = data.municipio || 'Municipio';
@@ -611,6 +637,38 @@ function loadAirportConfig() {
             document.getElementById('aeropuerto-pais').textContent = 'México';
         });
 }
+
+// Función para calcular hash simple de un string
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+}
+
+// Función para recargar configuración en tiempo real
+function startConfigPolling() {
+    // Recargar cada 30 segundos (30000ms)
+    setInterval(() => {
+        loadAirportConfig();
+    }, 30000);
+}
+
+// Función global para forzar recarga de configuración (puede ser llamada desde otras páginas)
+window.reloadAirportConfig = function() {
+    loadAirportConfig();
+};
+
+// Escuchar cambios en localStorage para actualizar cuando se modifica en otra pestaña
+window.addEventListener('storage', function(e) {
+    if (e.key === 'airport-config-updated') {
+        console.log('Configuración actualizada desde otra pestaña');
+        loadAirportConfig();
+    }
+});
 </script>
 </body>
 </html>

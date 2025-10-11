@@ -45,6 +45,8 @@ class Vuelo(db.Model):
     aeronave_id = db.Column(db.Integer, db.ForeignKey('Aeronaves.aeronave_id'), nullable=False)
     piloto_id = db.Column(db.Integer, db.ForeignKey('Pilotos.piloto_id'), nullable=False)
     copiloto_id = db.Column(db.Integer, db.ForeignKey('Pilotos.piloto_id'))
+    aeropuerto_id = db.Column(db.Integer, db.ForeignKey('configuracion_aeropuerto.id'), nullable=True)
+    pasajeros = db.Column(db.Text)
     observaciones = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -52,6 +54,7 @@ class Vuelo(db.Model):
     aeronave = db.relationship('Aeronave', back_populates='vuelos')
     piloto = db.relationship('Piloto', back_populates='vuelos_piloto', foreign_keys=[piloto_id])
     copiloto = db.relationship('Piloto', back_populates='vuelos_copiloto', foreign_keys=[copiloto_id])
+    aeropuerto = db.relationship('ConfiguracionAeropuerto', back_populates='vuelos')
     confirmaciones = db.relationship('Confirmacion', back_populates='vuelo')
 
 class Confirmacion(db.Model):
@@ -97,5 +100,9 @@ class ConfiguracionAeropuerto(db.Model):
     telefono = db.Column(db.String(20))
     email = db.Column(db.String(100))
     sitio_web = db.Column(db.String(200))
+    activo = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relación con vuelos
+    vuelos = db.relationship('Vuelo', back_populates='aeropuerto')

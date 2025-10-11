@@ -1,7 +1,7 @@
-from flask import Blueprint, request, jsonify
 import os
-from werkzeug.utils import secure_filename
+from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from models import db, Aeronave, Piloto, Vuelo, Confirmacion, Usuario, ConfiguracionAeropuerto
 from datetime import datetime
 
@@ -185,6 +185,7 @@ def vuelos():
                 'id_aeronave': v.aeronave_id,
                 'id_piloto': v.piloto_id,
                 'id_copiloto': v.copiloto_id,
+                'pasajeros': v.pasajeros,
                 'observaciones': v.observaciones
             }
         return jsonify([todict(x) for x in items])
@@ -199,6 +200,12 @@ def vuelos():
         fl_dt = datetime.fromisoformat(fl) if fl else None
     except Exception:
         return jsonify({'msg': '❌ Error: Formato de fecha de llegada inválido. Use formato ISO 8601'}), 400
+    
+    # Obtener aeropuerto activo automáticamente
+    aeropuerto_activo = ConfiguracionAeropuerto.query.filter_by(activo=True).first()
+    if not aeropuerto_activo:
+        aeropuerto_activo = ConfiguracionAeropuerto.query.first()
+    
     v = Vuelo(
         numero_vuelo=data.get('numero_vuelo') or data.get('codigo_vuelo'),
         origen=data.get('origen'),
@@ -208,6 +215,8 @@ def vuelos():
         aeronave_id=data.get('aeronave_id'),
         piloto_id=data.get('piloto_id'),
         copiloto_id=data.get('copiloto_id'),
+        aeropuerto_id=aeropuerto_activo.id if aeropuerto_activo else None,
+        pasajeros=data.get('pasajeros'),
         observaciones=data.get('observaciones')
     )
     try:
@@ -231,6 +240,7 @@ def vuelo_item(id):
             'id_aeronave': v.aeronave_id,
             'id_piloto': v.piloto_id,
             'id_copiloto': v.copiloto_id,
+            'pasajeros': v.pasajeros,
             'observaciones': v.observaciones
         })
     if request.method == 'PUT':
@@ -249,6 +259,8 @@ def vuelo_item(id):
             v.piloto_id = data.get('id_piloto')
         if 'id_copiloto' in data:
             v.copiloto_id = data.get('id_copiloto')
+        if 'pasajeros' in data:
+            v.pasajeros = data.get('pasajeros')
         if 'observaciones' in data:
             v.observaciones = data.get('observaciones')
         db.session.commit()
@@ -328,10 +340,15 @@ def usuario_actual():
         'rol': current_user.rol
     })
 
-# Configuración del Aeropuerto
+# Configuración del Aeropuerto - Obtener aeropuerto activo
 @api_bp.route('/configuracion-aeropuerto', methods=['GET'])
 def configuracion_aeropuerto():
-    config = ConfiguracionAeropuerto.query.first()
+    # Obtener el aeropuerto activo
+    config = ConfiguracionAeropuerto.query.filter_by(activo=True).first()
+    if not config:
+        # Si no hay activo, tomar el primero
+        config = ConfiguracionAeropuerto.query.first()
+    
     if not config:
         # Crear configuración por defecto si no existe
         config = ConfiguracionAeropuerto(
@@ -339,12 +356,14 @@ def configuracion_aeropuerto():
             ciudad='Ciudad',
             municipio='Municipio',
             estado='Estado',
-            pais='México'
+            pais='México',
+            activo=True
         )
         db.session.add(config)
         db.session.commit()
     
     return jsonify({
+        'id': config.id,
         'nombre': config.nombre,
         'ciudad': config.ciudad,
         'municipio': config.municipio,
@@ -357,5 +376,78 @@ def configuracion_aeropuerto():
         'codigo_postal': config.codigo_postal,
         'telefono': config.telefono,
         'email': config.email,
-        'sitio_web': config.sitio_web
+        'sitio_web': config.sitio_web,
+        'activo': config.activo
     })
+
+# Listar todos los aeropuertos
+@api_bp.route('/aeropuertos', methods=['GET', 'POST'])
+@login_required
+def aeropuertos():
+    # Verificar permisos de administrador
+    if current_user.rol != 'admin':
+        return jsonify({'msg': '🚫 Acceso Denegado: Solo administradores pueden gestionar aeropuertos'}), 403
+    
+    if request.method == 'GET':
+        aeropuertos_list = ConfiguracionAeropuerto.query.all()
+        return jsonify([{
+            'id': a.id,
+            'nombre': a.nombre,
+            'ciudad': a.ciudad,
+            'municipio': a.municipio,
+            'estado': a.estado,
+            'pais': a.pais,
+            'codigo_iata': a.codigo_iata,
+            'codigo_icao': a.codigo_icao,
+            'activo': a.activo,
+            'created_at': a.created_at.isoformat() if a.created_at else None
+        } for a in aeropuertos_list])
+    
+    # POST - Crear nuevo aeropuerto
+    data = request.json or {}
+    nombre = data.get('nombre', '').strip()
+    if not nombre:
+        return jsonify({'msg': '❌ Error: El nombre del aeropuerto es obligatorio'}), 400
+    
+    nuevo_aeropuerto = ConfiguracionAeropuerto(
+        nombre=nombre,
+        ciudad=data.get('ciudad'),
+        municipio=data.get('municipio'),
+        estado=data.get('estado'),
+        pais=data.get('pais', 'México'),
+        codigo_iata=data.get('codigo_iata'),
+        codigo_icao=data.get('codigo_icao'),
+        director=data.get('director'),
+        direccion=data.get('direccion'),
+        codigo_postal=data.get('codigo_postal'),
+        telefono=data.get('telefono'),
+        email=data.get('email'),
+        sitio_web=data.get('sitio_web'),
+        activo=False  # Por defecto no activo
+    )
+    
+    try:
+        db.session.add(nuevo_aeropuerto)
+        db.session.commit()
+        return jsonify({'msg': 'ok', 'id': nuevo_aeropuerto.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': f'Error al crear aeropuerto: {str(e)}'}), 500
+
+# Activar/desactivar aeropuerto
+@api_bp.route('/aeropuertos/<int:id>/activar', methods=['PUT'])
+@login_required
+def activar_aeropuerto(id):
+    if current_user.rol != 'admin':
+        return jsonify({'msg': '🚫 Acceso Denegado: Solo administradores pueden activar aeropuertos'}), 403
+    
+    aeropuerto = ConfiguracionAeropuerto.query.get_or_404(id)
+    
+    # Desactivar todos los demás aeropuertos
+    ConfiguracionAeropuerto.query.update({ConfiguracionAeropuerto.activo: False})
+    
+    # Activar el seleccionado
+    aeropuerto.activo = True
+    db.session.commit()
+    
+    return jsonify({'msg': 'Aeropuerto activado exitosamente'})

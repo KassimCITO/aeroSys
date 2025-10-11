@@ -23,10 +23,12 @@ El Sistema de Gestión de Aeropuertos es una aplicación web desarrollada en Fla
 - **Gestión completa de aeronaves** con imágenes
 - **Administración de pilotos** con información detallada
 - **Control de vuelos** con asignación de aeronaves y pilotos
+- **Gestión de pasajeros** por vuelo con lista detallada
 - **Sistema de confirmaciones** para seguimiento de vuelos
 - **Gestión de usuarios** con diferentes roles
-- **Reportes en PDF y Excel**
-- **Interfaz responsive** compatible con dispositivos móviles
+- **Gestión multi-aeropuerto** con cambio dinámico
+- **Reportes en PDF y Excel** con filtros avanzados
+- **Interfaz 100% responsive** compatible con dispositivos móviles
 
 ## Instalación y Configuración
 
@@ -297,26 +299,42 @@ El dashboard es la pantalla principal del sistema y muestra:
 
 ### Crear Nuevo Vuelo
 1. Navega a "Vuelos" en el menú principal
-2. Haz clic en "Agregar Vuelo"
-3. Completa el formulario:
+2. Haz clic en "Nuevo vuelo"
+3. Completa el formulario (100% responsivo):
    - **Número de Vuelo:** Código único del vuelo
+   - **Aeronave:** Selecciona la aeronave (con botón + para agregar nueva)
    - **Origen:** Aeropuerto de salida
    - **Destino:** Aeropuerto de llegada
    - **Fecha de Salida:** Fecha y hora de partida
    - **Fecha de Llegada:** Fecha y hora de llegada
-   - **Aeronave:** Selecciona la aeronave
-   - **Piloto:** Piloto al mando
+   - **Piloto:** Piloto al mando (con botón + para agregar nuevo)
    - **Copiloto:** Piloto secundario (opcional)
+   - **Estatus actual:** Programado, En Vuelo, Completado o Cancelado
+   - **Pasajeros:** Lista de pasajeros (uno por línea)
    - **Observaciones:** Notas adicionales
 4. Haz clic en "Guardar"
 
+**Nota:** El vuelo se asigna automáticamente al aeropuerto activo configurado en el sistema.
+
+### Gestión de Pasajeros
+El campo de pasajeros permite registrar la lista completa de pasajeros del vuelo:
+- Ingresa un nombre por línea
+- El campo es tipo textarea para facilitar la captura
+- Ejemplo:
+  ```
+  Juan Pérez
+  María García
+  Carlos López
+  ```
+
 ### Editar Vuelo
-1. En la lista de vuelos, haz clic en "Editar"
+1. En la lista de vuelos, haz clic en el botón "Editar" (ícono de lápiz)
 2. Modifica la información necesaria
-3. Haz clic en "Actualizar"
+3. Los campos de pasajeros y observaciones se muestran en áreas de texto amplias
+4. Haz clic en "Guardar"
 
 ### Confirmar Vuelo
-1. Haz clic en el botón "Confirmar" junto al vuelo
+1. Haz clic en el botón "Confirmar" (ícono de check verde) junto al vuelo
 2. Selecciona el estado:
    - **Confirmado:** Vuelo aprobado
    - **Pendiente:** Esperando confirmación
@@ -324,10 +342,24 @@ El dashboard es la pantalla principal del sistema y muestra:
 3. Agrega notas si es necesario
 4. Haz clic en "Guardar Confirmación"
 
-### Filtros
-- Filtra por estado del vuelo
-- Filtra por fecha
-- Filtra por aeronave o piloto
+**Nota:** Solo usuarios con rol de Administrador u Operador pueden confirmar vuelos.
+
+### Filtros Avanzados
+La sección de filtros incluye las siguientes opciones (100% responsivas):
+- **Estátus:** Filtra por estado del vuelo (Programado, En Vuelo, Completado, Cancelado)
+- **Aeronave:** Filtra por aeronave específica
+- **Piloto:** Filtra por piloto asignado
+- **Fecha Desde:** Fecha inicial del rango
+- **Fecha Hasta:** Fecha final del rango
+- **Botón Aplicar:** Aplica los filtros seleccionados
+
+Los filtros se aplican en tiempo real y también se incluyen en las exportaciones PDF y Excel.
+
+### Creación Rápida desde el Formulario
+El formulario de vuelos incluye botones "+" junto a los campos de Aeronave y Piloto que permiten:
+- Agregar una nueva aeronave sin salir del formulario
+- Agregar un nuevo piloto sin salir del formulario
+- La nueva aeronave o piloto se selecciona automáticamente después de crearse
 
 ## Gestión de Confirmaciones
 
@@ -391,14 +423,56 @@ El dashboard es la pantalla principal del sistema y muestra:
 
 ## Configuración del Sistema
 
-### Configuración del Aeropuerto
-1. Navega a "Configuración" en el menú principal
-2. Completa la información del aeropuerto:
-   - **Nombre:** Nombre oficial del aeropuerto
-   - **Códigos:** IATA e ICAO
-   - **Dirección:** Ubicación física
-   - **Contacto:** Teléfono y email
+### Configuración del Aeropuerto (Multi-Aeropuerto)
+
+El sistema soporta la gestión de múltiples aeropuertos. Solo un aeropuerto puede estar activo a la vez.
+
+#### Ver Aeropuertos Registrados
+1. Navega a "Configuración" → "Aeropuerto" en el menú principal
+2. Visualiza la tabla de aeropuertos registrados con:
+   - Nombre del aeropuerto
+   - Ciudad y Estado
+   - Código IATA
+   - Estado (Activo/Inactivo)
+   - Botón de acciones
+
+#### Agregar Nuevo Aeropuerto (Solo Administradores)
+1. Haz clic en el botón "Nuevo Aeropuerto"
+2. Completa el formulario modal con la información básica:
+   - **Nombre del Aeropuerto:** Nombre oficial (obligatorio)
+   - **Código IATA:** Código de 3 letras
+   - **Código ICAO:** Código de 4 letras
+   - **Ciudad:** Ciudad donde se ubica
+   - **Estado:** Estado o provincia
+   - **País:** País (por defecto: México)
 3. Haz clic en "Guardar"
+4. El nuevo aeropuerto se crea como inactivo
+
+#### Activar un Aeropuerto
+1. En la tabla de aeropuertos, localiza el aeropuerto que deseas activar
+2. Haz clic en el botón "Activar"
+3. Confirma la acción
+4. El aeropuerto se activa y el anterior se desactiva automáticamente
+5. El StatusBar (pie de página) se actualiza con la información del nuevo aeropuerto activo
+6. Todos los vuelos nuevos se asignarán automáticamente a este aeropuerto
+
+**Nota:** El cambio de aeropuerto activo se refleja inmediatamente en todas las pestañas abiertas del sistema.
+
+#### Editar Aeropuerto Activo
+1. El formulario principal muestra la información del aeropuerto activo
+2. Completa o modifica los campos:
+   - **Información General:** Nombre, códigos IATA/ICAO, director
+   - **Ubicación:** Dirección, código postal, municipio, ciudad, estado, país
+   - **Contacto:** Teléfono, email, sitio web
+3. Haz clic en "Guardar Cambios"
+4. La información se actualiza en el StatusBar automáticamente
+
+#### StatusBar del Aeropuerto
+El pie de página del sistema muestra constantemente:
+- Nombre del aeropuerto activo
+- Ciudad, municipio, estado y país
+- Se actualiza automáticamente cada 30 segundos
+- Se actualiza inmediatamente al cambiar de aeropuerto
 
 ### Configuración de Usuario
 1. Haz clic en tu nombre de usuario
@@ -494,7 +568,7 @@ chmod 755 static/uploads
 
 **Soluciones:**
 - Tamaño máximo: 16MB
-- Formatos permitidos: JPG, JPEG, PNG, GIF
+- Formatos permitidos: WebP, JPG, JPEG, PNG, GIF
 - Verificar que la ruta `static/uploads` existe
 - Limpiar caché del navegador (Ctrl + F5)
 
@@ -660,6 +734,30 @@ python -m flask db upgrade
 
 ---
 
-**Versión del Manual:** 1.0  
+## Novedades de la Versión 1.1
+
+### Nuevas Características
+- ✅ **Gestión Multi-Aeropuerto:** Soporte para múltiples aeropuertos con cambio dinámico
+- ✅ **Campo de Pasajeros:** Registro de lista de pasajeros por vuelo (uno por línea)
+- ✅ **Filtros Avanzados:** Filtros por aeronave y piloto en la gestión de vuelos
+- ✅ **Interfaz 100% Responsiva:** Todos los formularios optimizados para dispositivos móviles
+- ✅ **StatusBar Dinámico:** Información del aeropuerto activo en tiempo real
+- ✅ **Actualización Optimizada:** Intervalo de actualización del StatusBar aumentado a 30 segundos
+
+### Mejoras en la Base de Datos
+- Campo `pasajeros` agregado a la tabla Vuelos
+- Campo `aeropuerto_id` agregado a la tabla Vuelos (relación con aeropuerto)
+- Campo `activo` agregado a la tabla ConfiguracionAeropuerto
+- Asignación automática de aeropuerto a vuelos nuevos
+
+### Mejoras en la Interfaz
+- Formulario de vuelos reorganizado con campos de texto amplios
+- Filtros responsivos con diseño de 6 columnas
+- Botones de creación rápida en formularios
+- Modal para agregar nuevos aeropuertos
+
+---
+
+**Versión del Manual:** 1.1  
 **Última Actualización:** Octubre 2025  
-**Sistema:** Sistema de Gestión de Aeropuertos v1.0
+**Sistema:** Sistema de Gestión de Aeropuertos v1.1

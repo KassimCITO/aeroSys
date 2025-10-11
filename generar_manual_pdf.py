@@ -336,7 +336,7 @@ class ManualPDFGenerator:
                     'Crear directorio: mkdir -p static/uploads',
                     'Verificar permisos: chmod 755 static/uploads',
                     'Tamanio maximo: 16MB',
-                    'Formatos permitidos: JPG, JPEG, PNG, GIF'
+                    'Formatos permitidos: WebP, JPG, JPEG, PNG, GIF'
                 ]
             },
             {

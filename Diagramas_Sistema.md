@@ -79,7 +79,7 @@
 │  │     VUELOS      │    │  CONFIRMACIONES │                │
 │  ├─────────────────┤    ├─────────────────┤                │
 │  │ vuelo_id (PK)   │    │ confirmacion_id │                │
-│  │ numero_vuelo    │    │ vuelo_id (FK)   │                │
+│  │ codigo_vuelo    │    │ vuelo_id (FK)   │                │
 │  │ origen          │    │ estado          │                │
 │  │ destino         │    │ notas           │                │
 │  │ fecha_salida    │    │ created_at      │                │
@@ -87,12 +87,17 @@
 │  │ aeronave_id (FK)│             │                        │
 │  │ piloto_id (FK)  │             │                        │
 │  │ copiloto_id (FK)│             │                        │
+│  │ estado          │             │                        │
+│  │ pasajeros       │◄────── NUEVO                        │
 │  │ observaciones   │             │                        │
+│  │ aeropuerto_id   │◄────── NUEVO                        │
 │  │ created_at      │             │                        │
 │  └─────────────────┘             │                        │
 │           │                       │                        │
 │           └───────────────────────┘                        │
-│                                                             │
+│           │                                                 │
+│           │ (FK)                                            │
+│           v                                                 │
 │  ┌─────────────────┐                                        │
 │  │CONFIG_AEROPUERTO│                                        │
 │  ├─────────────────┤                                        │
@@ -110,6 +115,7 @@
 │  │ telefono        │                                        │
 │  │ email           │                                        │
 │  │ sitio_web       │                                        │
+│  │ activo          │◄────── NUEVO                        │
 │  │ created_at      │                                        │
 │  │ updated_at      │                                        │
 │  └─────────────────┘                                        │
@@ -188,7 +194,11 @@
 │  │  └─────────────┘  └─────────────┘  └─────────────┘    ││
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    ││
 │  │  │AUTENTICACIÓN│  │  VALIDACIÓN │  │   FILTROS   │    ││
-│  │  │  (Login)    │  │  (Forms)    │  │  (Search)   │    ││
+│  │  │  (Login)    │  │  (Forms)    │  │  Avanzados  │    ││
+│  │  └─────────────┘  └─────────────┘  └─────────────┘    ││
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    ││
+│  │  │MULTI-AIRPORT│  │  STATUSBAR  │  │  PASAJEROS  │    ││
+│  │  │  (Gestión)  │  │  (Dinámico) │  │  (Gestión)  │    ││
 │  │  └─────────────┘  └─────────────┘  └─────────────┘    ││
 │  └─────────────────────────────────────────────────────────┘│
 │                           │                                │
@@ -309,11 +319,16 @@
 │  │   usuarios      │    │   vuelos        │                │
 │  │ • Configurar    │    │ • Confirmar     │                │
 │  │   sistema       │    │   vuelos        │                │
-│  │ • Ver reportes  │    │ • Ver reportes  │                │
+│  │ • Gestionar     │    │ • Agregar       │                │
+│  │   aeropuertos   │    │   pasajeros     │                │
+│  │ • Activar       │    │ • Ver reportes  │                │
+│  │   aeropuerto    │    │   con filtros   │                │
+│  │ • Ver reportes  │    │ • Gestionar     │                │
+│  │   con filtros   │    │   aeronaves     │                │
 │  │ • Gestionar     │    │ • Gestionar     │                │
-│  │   aeronaves     │    │   aeronaves     │                │
-│  │ • Gestionar     │    │ • Gestionar     │                │
-│  │   pilotos       │    │   pilotos       │                │
+│  │   aeronaves     │    │   pilotos       │                │
+│  │ • Gestionar     │    │                 │                │
+│  │   pilotos       │    │                 │                │
 │  └─────────────────┘    └─────────────────┘                │
 │           │                       │                        │
 │           │                       │                        │
@@ -341,6 +356,89 @@
 
 ---
 
-**Versión de los Diagramas:** 1.0  
+## Relaciones y Flujos Principales
+
+### Relación Multi-Aeropuerto
+```
+┌─────────────────────┐
+│ ConfiguracionAeropuerto │
+│ (activo = true)     │
+└──────────┬──────────┘
+           │ 1
+           │
+           │ N
+┌──────────▼──────────┐
+│      Vuelos         │
+│ (aeropuerto_id FK)  │
+└─────────────────────┘
+```
+
+### Flujo de Filtros Avanzados
+```
+Usuario → Selecciona Filtros (Estado, Aeronave, Piloto, Fechas)
+          ↓
+       Aplicar Filtros
+          ↓
+       API Request con parámetros
+          ↓
+       Query a Base de Datos
+          ↓
+       Resultados Filtrados
+          ↓
+       Actualización de Tabla
+```
+
+### Flujo de Gestión de Pasajeros
+```
+Usuario → Crear/Editar Vuelo
+          ↓
+       Ingresar Pasajeros (uno por línea)
+          ↓
+       Guardar en campo TEXT
+          ↓
+       Almacenar en BD
+          ↓
+       Mostrar en Vista/Reportes
+```
+
+### Flujo de Cambio de Aeropuerto Activo
+```
+Admin → Selecciona Aeropuerto
+        ↓
+     Activar Aeropuerto
+        ↓
+     Desactivar Anterior
+        ↓
+     Actualizar StatusBar
+        ↓
+     Broadcast a Todas las Sesiones
+        ↓
+     Nuevos Vuelos → Aeropuerto Activo
+```
+
+---
+
+## Novedades de la Versión 1.1
+
+### Cambios en el Modelo de Datos
+- ✅ **Tabla Vuelos**: Agregados campos `pasajeros` (Text) y `aeropuerto_id` (FK)
+- ✅ **Tabla ConfiguracionAeropuerto**: Agregado campo `activo` (Boolean)
+- ✅ **Relación**: Vuelos → ConfiguracionAeropuerto (N:1)
+
+### Nuevos Componentes
+- ✅ **Filtros Avanzados**: Aeronave y Piloto en gestión de vuelos
+- ✅ **StatusBar Dinámico**: Actualización cada 30 segundos
+- ✅ **Multi-Aeropuerto**: Gestión y cambio dinámico de aeropuerto activo
+- ✅ **Gestión de Pasajeros**: Campo de texto para lista de pasajeros
+
+### Mejoras en la Interfaz
+- ✅ **100% Responsive**: Todos los formularios optimizados
+- ✅ **Filtros Responsivos**: Diseño de 6 columnas adaptable
+- ✅ **Modales**: Creación rápida de aeropuertos
+- ✅ **Campos Amplios**: Pasajeros y observaciones con textareas
+
+---
+
+**Versión de los Diagramas:** 1.1  
 **Última Actualización:** Octubre 2025  
-**Sistema:** Sistema de Gestión de Aeropuertos v1.0
+**Sistema:** Sistema de Gestión de Aeropuertos v1.1

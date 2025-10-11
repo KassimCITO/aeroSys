@@ -76,6 +76,8 @@ function loadAeronaves() {
         })
         .then(function(data) {
             aeronaves = data;
+            
+            // Poblar select del formulario
             var select = document.getElementById('aeronave_id');
             var currentValue = select.value;
             select.innerHTML = '<option value="">Seleccione una aeronave</option>';
@@ -88,6 +90,21 @@ function loadAeronaves() {
             if (currentValue && document.querySelector('#aeronave_id option[value="' + currentValue + '"]')) {
                 select.value = currentValue;
             }
+            
+            // Poblar select de filtro
+            var filtroSelect = document.getElementById('filtro_aeronave');
+            var currentFiltroValue = filtroSelect.value;
+            filtroSelect.innerHTML = '<option value="">Todas</option>';
+            data.forEach(function(a) {
+                var option = document.createElement('option');
+                option.value = a.aeronave_id;
+                option.textContent = a.matricula + ' - ' + a.modelo;
+                filtroSelect.appendChild(option);
+            });
+            if (currentFiltroValue) {
+                filtroSelect.value = currentFiltroValue;
+            }
+            
             return data;
         })
         .catch(function(error) {
@@ -104,13 +121,21 @@ function loadPilotos() {
         })
         .then(function(data) {
             pilotos = data;
+            
+            // Poblar select de piloto del formulario
             var selectPiloto = document.getElementById('piloto_id');
             var currentPilotoValue = selectPiloto.value;
             selectPiloto.innerHTML = '<option value="">Seleccione un piloto</option>';
             
+            // Poblar select de copiloto del formulario
             var selectCopiloto = document.getElementById('copiloto_id');
             var currentCopilotoValue = selectCopiloto.value;
             selectCopiloto.innerHTML = '<option value="">Seleccione un copiloto (opcional)</option>';
+            
+            // Poblar select de filtro
+            var filtroSelect = document.getElementById('filtro_piloto');
+            var currentFiltroValue = filtroSelect.value;
+            filtroSelect.innerHTML = '<option value="">Todos</option>';
             
             data.forEach(function(p) {
                 var optionPiloto = document.createElement('option');
@@ -122,6 +147,11 @@ function loadPilotos() {
                 optionCopiloto.value = p.piloto_id;
                 optionCopiloto.textContent = p.nombre + ' (' + p.licencia + ')';
                 selectCopiloto.appendChild(optionCopiloto);
+                
+                var optionFiltro = document.createElement('option');
+                optionFiltro.value = p.piloto_id;
+                optionFiltro.textContent = p.nombre + ' (' + p.licencia + ')';
+                filtroSelect.appendChild(optionFiltro);
             });
             
             if (currentPilotoValue && document.querySelector('#piloto_id option[value="' + currentPilotoValue + '"]')) {
@@ -129,6 +159,9 @@ function loadPilotos() {
             }
             if (currentCopilotoValue && document.querySelector('#copiloto_id option[value="' + currentCopilotoValue + '"]')) {
                 selectCopiloto.value = currentCopilotoValue;
+            }
+            if (currentFiltroValue) {
+                filtroSelect.value = currentFiltroValue;
             }
             
             return data;
@@ -142,6 +175,8 @@ function loadPilotos() {
 function fetchVuelos() {
     // Obtener valores de los filtros
     var estado = document.getElementById('filtro_estado').value;
+    var aeronave_id = document.getElementById('filtro_aeronave').value;
+    var piloto_id = document.getElementById('filtro_piloto').value;
     var fecha_desde = document.getElementById('filtro_fecha_desde').value;
     var fecha_hasta = document.getElementById('filtro_fecha_hasta').value;
     
@@ -149,6 +184,8 @@ function fetchVuelos() {
     var url = '/api/vuelos?';
     var params = [];
     if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (aeronave_id) params.push('aeronave_id=' + encodeURIComponent(aeronave_id));
+    if (piloto_id) params.push('piloto_id=' + encodeURIComponent(piloto_id));
     if (fecha_desde) params.push('fecha_desde=' + encodeURIComponent(fecha_desde));
     if (fecha_hasta) params.push('fecha_hasta=' + encodeURIComponent(fecha_hasta));
     
@@ -217,6 +254,7 @@ function saveVuelo() {
         piloto_id: parseInt(document.getElementById('piloto_id').value),
         copiloto_id: document.getElementById('copiloto_id').value ? parseInt(document.getElementById('copiloto_id').value) : null,
         estado: document.getElementById('estado').value,
+        pasajeros: document.getElementById('pasajeros').value || null,
         observaciones: document.getElementById('observaciones').value || null
     };
 
@@ -311,6 +349,7 @@ function editV(id) {
             document.getElementById('piloto_id').value = data.id_piloto;
             document.getElementById('copiloto_id').value = data.id_copiloto || '';
             document.getElementById('estado').value = data.estado || 'Programado';
+            document.getElementById('pasajeros').value = data.pasajeros || '';
             document.getElementById('observaciones').value = data.observaciones || '';
             
             document.getElementById('formTitle').textContent = 'Editar Vuelo (ID ' + id + ')';
@@ -329,6 +368,7 @@ function editV(id) {
                     id_piloto: parseInt(document.getElementById('piloto_id').value),
                     id_copiloto: document.getElementById('copiloto_id').value ? parseInt(document.getElementById('copiloto_id').value) : null,
                     estado: document.getElementById('estado').value,
+                    pasajeros: document.getElementById('pasajeros').value || null,
                     observaciones: document.getElementById('observaciones').value || null
                 };
                 
@@ -402,27 +442,14 @@ function checkUserPermissions() {
 
 // Funciones para filtros y exportación
 function aplicarFiltros() {
-    var estado = document.getElementById('filtro_estado').value;
-    var fecha_desde = document.getElementById('filtro_fecha_desde').value;
-    var fecha_hasta = document.getElementById('filtro_fecha_hasta').value;
-    
-    // Construir URL con filtros
-    var url = '/reports/vuelos?';
-    var params = [];
-    if (estado) params.push('estado=' + encodeURIComponent(estado));
-    if (fecha_desde) params.push('fecha_desde=' + encodeURIComponent(fecha_desde));
-    if (fecha_hasta) params.push('fecha_hasta=' + encodeURIComponent(fecha_hasta));
-    
-    if (params.length > 0) {
-        url += params.join('&');
-    }
-    
-    // Abrir reporte en nueva ventana
-    window.open(url, '_blank');
+    // Simplemente recargar la tabla con los filtros actuales
+    fetchVuelos();
 }
 
 function exportarPDF() {
     var estado = document.getElementById('filtro_estado').value;
+    var aeronave_id = document.getElementById('filtro_aeronave').value;
+    var piloto_id = document.getElementById('filtro_piloto').value;
     var fecha_desde = document.getElementById('filtro_fecha_desde').value;
     var fecha_hasta = document.getElementById('filtro_fecha_hasta').value;
     
@@ -430,6 +457,8 @@ function exportarPDF() {
     var url = '/reports/vuelos?';
     var params = [];
     if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (aeronave_id) params.push('aeronave_id=' + encodeURIComponent(aeronave_id));
+    if (piloto_id) params.push('piloto_id=' + encodeURIComponent(piloto_id));
     if (fecha_desde) params.push('fecha_desde=' + encodeURIComponent(fecha_desde));
     if (fecha_hasta) params.push('fecha_hasta=' + encodeURIComponent(fecha_hasta));
     
@@ -443,6 +472,8 @@ function exportarPDF() {
 
 function exportarExcel() {
     var estado = document.getElementById('filtro_estado').value;
+    var aeronave_id = document.getElementById('filtro_aeronave').value;
+    var piloto_id = document.getElementById('filtro_piloto').value;
     var fecha_desde = document.getElementById('filtro_fecha_desde').value;
     var fecha_hasta = document.getElementById('filtro_fecha_hasta').value;
     
@@ -450,6 +481,8 @@ function exportarExcel() {
     var url = '/reports/vuelos?formato=excel';
     var params = [];
     if (estado) params.push('estado=' + encodeURIComponent(estado));
+    if (aeronave_id) params.push('aeronave_id=' + encodeURIComponent(aeronave_id));
+    if (piloto_id) params.push('piloto_id=' + encodeURIComponent(piloto_id));
     if (fecha_desde) params.push('fecha_desde=' + encodeURIComponent(fecha_desde));
     if (fecha_hasta) params.push('fecha_hasta=' + encodeURIComponent(fecha_hasta));
     
@@ -829,7 +862,7 @@ function hideFormWithTransition(formId) {
         <div class="card-body">
             <h5 class="card-title">Filtros</h5>
             <div class="row">
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label for="filtro_estado" class="form-label">Estátus</label>
                     <select class="form-select" id="filtro_estado">
                         <option value="">Todos</option>
@@ -839,17 +872,29 @@ function hideFormWithTransition(formId) {
                         <option value="Cancelado">Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 col-sm-6 mb-3">
+                    <label for="filtro_aeronave" class="form-label">Aeronave</label>
+                    <select class="form-select" id="filtro_aeronave">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6 mb-3">
+                    <label for="filtro_piloto" class="form-label">Piloto</label>
+                    <select class="form-select" id="filtro_piloto">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label for="filtro_fecha_desde" class="form-label">Fecha Desde</label>
                     <input type="date" class="form-control" id="filtro_fecha_desde">
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label for="filtro_fecha_hasta" class="form-label">Fecha Hasta</label>
                     <input type="date" class="form-control" id="filtro_fecha_hasta">
                 </div>
-                <div class="col-md-3 d-flex align-items-end mb-3">
-                    <button class="btn btn-outline-primary" onclick="aplicarFiltros()">
-                        <i class="fas fa-filter"></i> Aplicar Filtros
+                <div class="col-md-2 col-sm-6 d-flex align-items-end mb-3">
+                    <button class="btn btn-outline-primary w-100" onclick="aplicarFiltros()">
+                        <i class="fas fa-filter"></i> Aplicar
                     </button>
                 </div>
             </div>
@@ -923,9 +968,8 @@ function hideFormWithTransition(formId) {
                     </div>
                 </div>
 
-                <!-- Agregar este bloque dentro del formulario, después del div de piloto/copiloto -->
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label for="estado" class="form-label">Estatus actual *</label>
                         <select class="form-select" id="estado" required>
                             <option value="Programado">Programado</option>
@@ -934,9 +978,24 @@ function hideFormWithTransition(formId) {
                             <option value="Cancelado">Cancelado</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="pasajeros" class="form-label">
+                            Pasajeros
+                            <small class="text-muted">(Uno por línea)</small>
+                        </label>
+                        <textarea class="form-control" id="pasajeros" rows="3" 
+                                  placeholder="Ingrese el nombre de cada pasajero en una línea separada&#10;Ejemplo:&#10;Juan Pérez&#10;María García&#10;Carlos López"></textarea>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mb-3">
                         <label for="observaciones" class="form-label">Observaciones</label>
-                        <input type="text" class="form-control" id="observaciones" maxlength="500">
+                        <textarea class="form-control" id="observaciones" rows="3" 
+                                  placeholder="Ingrese observaciones adicionales sobre el vuelo..."></textarea>
                     </div>
                 </div>
 
