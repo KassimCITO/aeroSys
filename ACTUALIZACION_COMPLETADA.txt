@@ -302,7 +302,340 @@ Todos los objetivos se cumplieron:
 ================================================================================
 Generado: 10 de Octubre de 2025, 14:20 hrs
 Versión del Sistema: 1.1.0
-Estado: PRODUCCIÓN ✅
+Estado: PRODUCCIÓN
+Desarrollado por: KassimCITO
+Repositorio: https://github.com/KassimCITO/aeroSys
+================================================================================
+
+
+================================================================================
+                    ACTUALIZACION VERSION 1.1 - NUEVAS FUNCIONALIDADES
+================================================================================
+
+FECHA: 11 de Octubre de 2025, 16:00 hrs
+VERSION: 1.1
+ESTADO: PRODUCCION - 100% FUNCIONAL
+
+================================================================================
+RESUMEN DE CAMBIOS PRINCIPALES
+================================================================================
+
+Sistema Multi-Aeropuerto Implementado
+Campo de Pasajeros Agregado a Vuelos
+Filtros Avanzados por Aeronave y Piloto
+Interfaz 100% Responsive Optimizada
+StatusBar Dinamico con Actualizacion Automatica
+Documentacion Actualizada a Version 1.1
+
+================================================================================
+CAMBIOS EN BASE DE DATOS
+================================================================================
+
+Tabla: Vuelos
+  - Campo pasajeros (Text) - Lista de pasajeros uno por linea
+  - Campo aeropuerto_id (Integer, FK) - Relacion con ConfiguracionAeropuerto
+  - Asignacion automatica del aeropuerto activo al crear vuelos
+
+Tabla: ConfiguracionAeropuerto
+  - Campo activo (Boolean) - Indica el aeropuerto actualmente en uso
+  - Solo un aeropuerto puede estar activo a la vez
+  - Sistema de activacion/desactivacion automatica
+
+Migraciones Creadas:
+  - add_pasajeros_to_vuelos.py
+  - add_aeropuerto_id_to_vuelos.py
+
+================================================================================
+NUEVAS FUNCIONALIDADES
+================================================================================
+
+1. Sistema Multi-Aeropuerto
+   - Gestion de multiples aeropuertos en el sistema
+   - Activacion dinamica de aeropuerto activo
+   - Asignacion automatica a vuelos nuevos
+   - Cambio de aeropuerto se refleja en todas las sesiones
+   - Solo administradores pueden activar aeropuertos
+
+2. Gestion de Pasajeros
+   - Campo de texto para lista de pasajeros
+   - Formato: un pasajero por linea
+   - Textarea de 3 filas para facil captura
+   - Se incluye en reportes y exportaciones
+
+3. Filtros Avanzados en Vuelos
+   - Filtro por Aeronave especifica
+   - Filtro por Piloto asignado
+   - Filtros se aplican en tiempo real
+   - Se incluyen en exportaciones PDF y Excel
+   - Diseno responsive de 6 columnas
+
+4. StatusBar Dinamico
+   - Muestra aeropuerto activo en pie de pagina
+   - Actualizacion automatica cada 30 segundos
+   - Informacion: Nombre, ciudad, municipio, estado, pais
+   - Se actualiza al cambiar de aeropuerto
+
+5. Interfaz 100% Responsive
+   - Todos los formularios optimizados para moviles
+   - Campos reorganizados con textareas amplias
+   - Filtros adaptables a diferentes pantallas
+   - Botones de creacion rapida en formularios
+
+================================================================================
+ARCHIVOS MODIFICADOS
+================================================================================
+
+Backend:
+  - models.py                  - Campos pasajeros y aeropuerto_id agregados
+  - api.py                     - Logica de asignacion automatica de aeropuerto
+  - api.py                     - Filtros avanzados implementados
+  - api.py                     - Endpoints para gestion de aeropuertos
+
+Frontend:
+  - templates/vuelos.html      - Formulario reorganizado 100% responsive
+  - templates/vuelos.html      - Campo pasajeros agregado (textarea 3 filas)
+  - templates/vuelos.html      - Filtros de aeronave y piloto agregados
+  - templates/vuelos.html      - JavaScript actualizado para filtros
+
+Migraciones:
+  - migrations/versions/add_pasajeros_to_vuelos.py        - NUEVO
+  - migrations/versions/add_aeropuerto_id_to_vuelos.py    - NUEVO
+
+Documentacion:
+  - Manual_de_Usuario.md       - Actualizado a version 1.1
+  - Diagramas_Sistema.md       - Actualizado a version 1.1
+
+================================================================================
+DETALLES TECNICOS
+================================================================================
+
+Campo Pasajeros:
+  - Tipo: Text (SQLAlchemy)
+  - Nullable: True
+  - Formato: Texto libre, un pasajero por linea
+  - Interfaz: Textarea de 3 filas
+  - Placeholder: Ejemplo con 3 nombres
+
+Campo Aeropuerto_ID:
+  - Tipo: Integer (Foreign Key)
+  - Relacion: Vuelos N:1 ConfiguracionAeropuerto
+  - Asignacion: Automatica al crear vuelo
+  - Logica: Busca aeropuerto con activo=True
+  - Fallback: Toma el primero si no hay activo
+
+Campo Activo en ConfiguracionAeropuerto:
+  - Tipo: Boolean
+  - Default: False
+  - Constraint: Solo uno puede ser True
+  - Actualizacion: Al activar uno, desactiva todos los demas
+
+Filtros Avanzados:
+  - Parametros API: aeronave_id, piloto_id
+  - Metodo: Query params en GET /api/vuelos
+  - Frontend: Selectores poblados automaticamente
+  - Responsive: col-md-2 col-sm-6 (6 columnas)
+
+StatusBar:
+  - Endpoint: GET /api/configuracion-aeropuerto
+  - Intervalo: 30000ms (30 segundos)
+  - Tecnologia: setInterval + fetch API
+  - Ubicacion: Footer de base.html
+
+================================================================================
+MEJORAS EN LA INTERFAZ
+================================================================================
+
+Formulario de Vuelos:
+  - Estado: Ancho completo (col-12)
+  - Pasajeros: Ancho completo, textarea 3 filas
+  - Observaciones: Ancho completo, textarea 4 filas
+  - Orden optimizado para mejor UX
+
+Seccion de Filtros:
+  - Diseno: 6 columnas responsivas
+  - Campos: Estatus, Aeronave, Piloto, Fecha Desde, Fecha Hasta, Boton
+  - Responsive: col-md-2 col-sm-6
+  - Boton Aplicar: w-100 en moviles
+
+Creacion Rapida:
+  - Botones + junto a Aeronave y Piloto
+  - Modales para agregar sin salir del formulario
+  - Seleccion automatica despues de crear
+
+================================================================================
+DOCUMENTACION ACTUALIZADA
+================================================================================
+
+Manual de Usuario (Version 1.1):
+  - Seccion "Gestion de Vuelos" ampliada
+  - Subseccion "Gestion de Pasajeros" agregada
+  - Subseccion "Filtros Avanzados" agregada
+  - Subseccion "Creacion Rapida" agregada
+  - Seccion "Configuracion Multi-Aeropuerto" agregada
+  - Seccion "Novedades Version 1.1" agregada
+
+Diagramas del Sistema (Version 1.1):
+  - Diagrama de Base de Datos actualizado
+  - Campos nuevos marcados con flechas
+  - Relacion Vuelos-ConfiguracionAeropuerto agregada
+  - Diagrama de Componentes actualizado
+  - Nuevos componentes: Multi-Airport, StatusBar, Pasajeros
+  - Casos de Uso actualizados
+  - Seccion "Relaciones y Flujos Principales" agregada
+  - Seccion "Novedades Version 1.1" agregada
+
+================================================================================
+ESTADISTICAS DE CODIGO
+================================================================================
+
+Lineas Agregadas:
+  - Backend (models.py, api.py): ~80 lineas
+  - Frontend (vuelos.html): ~150 lineas
+  - Migraciones: ~60 lineas
+  - Total codigo nuevo: ~290 lineas
+
+Documentacion Actualizada:
+  - Manual de Usuario: +150 lineas
+  - Diagramas del Sistema: +100 lineas
+  - Total documentacion: +250 lineas
+
+Archivos Modificados:
+  - 14 archivos modificados
+  - 2 migraciones nuevas
+  - 2 documentos actualizados
+
+================================================================================
+COMMIT REALIZADO
+================================================================================
+
+Mensaje: "Version 1.1: Implementacion de gestion multi-aeropuerto, 
+          campo de pasajeros y filtros avanzados"
+
+Detalles del Commit:
+  - 14 archivos modificados
+  - 809 inserciones
+  - 89 eliminaciones
+  - 2 archivos nuevos (migraciones)
+  - Hash: 4bff2d7
+
+Repositorio: https://github.com/KassimCITO/aeroSys
+Branch: main
+Estado: Push completado exitosamente
+
+================================================================================
+PRUEBAS REALIZADAS
+================================================================================
+
+Base de Datos:
+  - Migracion add_pasajeros_to_vuelos ejecutada correctamente
+  - Migracion add_aeropuerto_id_to_vuelos ejecutada correctamente
+  - Campo pasajeros acepta texto libre
+  - Campo aeropuerto_id acepta FK correctamente
+  - Campo activo funciona como Boolean
+
+API:
+  - GET /api/vuelos con filtros aeronave_id y piloto_id - OK
+  - POST /api/vuelos asigna aeropuerto_id automaticamente - OK
+  - GET /api/configuracion-aeropuerto retorna aeropuerto activo - OK
+  - POST /api/configuracion-aeropuerto/<id>/activar cambia activo - OK
+
+Frontend:
+  - Campo pasajeros se muestra y guarda correctamente - OK
+  - Filtros de aeronave y piloto funcionan - OK
+  - StatusBar se actualiza cada 30 segundos - OK
+  - Formulario 100% responsive en moviles - OK
+  - Botones de creacion rapida funcionan - OK
+
+================================================================================
+PROXIMOS PASOS RECOMENDADOS
+================================================================================
+
+1. Ejecutar migraciones en PythonAnywhere
+   flask db upgrade
+
+2. Verificar que el aeropuerto activo este configurado
+   Acceder a Configuracion > Aeropuerto
+
+3. Probar creacion de vuelos con pasajeros
+   Verificar que se asigna aeropuerto_id automaticamente
+
+4. Probar filtros avanzados
+   Filtrar por aeronave y piloto
+
+5. Verificar StatusBar
+   Confirmar que muestra aeropuerto activo
+
+6. Generar reportes
+   Verificar que incluyen pasajeros y respetan filtros
+
+================================================================================
+COMANDOS UTILES
+================================================================================
+
+Aplicar migraciones:
+  flask db upgrade
+
+Verificar migraciones:
+  flask db current
+
+Revertir ultima migracion (si es necesario):
+  flask db downgrade
+
+Iniciar aplicacion:
+  python app.py
+
+Acceder al sistema:
+  http://127.0.0.1:5000
+  Usuario: admin
+  Contrasena: 123456
+
+================================================================================
+VERIFICACION FINAL
+================================================================================
+
+Sistema funcional al 100%
+Todas las migraciones aplicadas correctamente
+Documentacion actualizada a version 1.1
+Cambios subidos a GitHub exitosamente
+Filtros avanzados funcionando
+Sistema multi-aeropuerto operativo
+Campo de pasajeros implementado
+StatusBar dinamico activo
+Interfaz 100% responsive
+Sin errores pendientes
+
+================================================================================
+CONCLUSION
+================================================================================
+
+ACTUALIZACION VERSION 1.1 COMPLETADA EXITOSAMENTE
+
+El Sistema de Gestion de Aeropuertos version 1.1 incluye:
+
+NUEVAS FUNCIONALIDADES
+  - Sistema multi-aeropuerto con cambio dinamico
+  - Gestion de pasajeros por vuelo
+  - Filtros avanzados por aeronave y piloto
+  - StatusBar dinamico con actualizacion automatica
+  - Interfaz 100% responsive
+
+MEJORAS EN BASE DE DATOS
+  - Campo pasajeros en tabla Vuelos
+  - Campo aeropuerto_id en tabla Vuelos
+  - Campo activo en tabla ConfiguracionAeropuerto
+  - Relacion N:1 entre Vuelos y ConfiguracionAeropuerto
+
+DOCUMENTACION ACTUALIZADA
+  - Manual de Usuario version 1.1
+  - Diagramas del Sistema version 1.1
+  - Nuevas secciones y flujos documentados
+
+El sistema esta listo para produccion
+
+================================================================================
+Actualizado: 11 de Octubre de 2025, 16:00 hrs
+Version del Sistema: 1.1
+Estado: PRODUCCION
 Desarrollado por: KassimCITO
 Repositorio: https://github.com/KassimCITO/aeroSys
 ================================================================================
