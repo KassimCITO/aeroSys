@@ -26,7 +26,7 @@ def seed_data():
             estado='Michoacán',
             pais='México',
             telefono='+52 (453) 101.5588',
-            email='juan_colorado@outlook.com',
+            email='juan_colorado@hotmail.com',
             sitio_web='https://github.com/KassimCITO/aeroSys'
         )
         db.session.add(config)
@@ -36,11 +36,11 @@ def seed_data():
         # ===========================================
         print("🛩️  Creando aeronaves...")
         aeronaves = [
-            Aeronave(matricula='XA-ABC', modelo='A320-200', fabricante='Airbus', capacidad=180, tipo_aeronave='Comercial'),
-            Aeronave(matricula='XA-DEF', modelo='B737-800', fabricante='Boeing', capacidad=160, tipo_aeronave='Comercial'),
-            Aeronave(matricula='XA-GHI', modelo='C208B', fabricante='Cessna', capacidad=12, tipo_aeronave='Privado'),
-            Aeronave(matricula='XA-JKL', modelo='A330-300', fabricante='Airbus', capacidad=300, tipo_aeronave='Comercial'),
-            Aeronave(matricula='XA-MNO', modelo='B787-9', fabricante='Boeing', capacidad=290, tipo_aeronave='Comercial')
+            Aeronave(matricula='XA-ABC', modelo='A320-200', fabricante='Airbus', capacidad=180, tipo_aeronave='Comercial', imagen='airbus.jpg'),
+            Aeronave(matricula='XA-DEF', modelo='B737-800', fabricante='Boeing', capacidad=160, tipo_aeronave='Comercial', imagen='boeing.jpg'),
+            Aeronave(matricula='XA-GHI', modelo='C208B', fabricante='Cessna', capacidad=12, tipo_aeronave='Privado', imagen='cessna.jpg'),
+            Aeronave(matricula='XA-BNE', modelo='A330-300', fabricante='Airbus Helicopters', capacidad=12, tipo_aeronave='Comercial', imagen='helicoptero.jpg'),
+            Aeronave(matricula='XD-MNO', modelo='B787-9', fabricante='Northrop Grumman', capacidad=1, tipo_aeronave='Dron Militar', imagen='dron.jpg')
         ]
         db.session.add_all(aeronaves)
         db.session.commit()
@@ -50,11 +50,14 @@ def seed_data():
         # ===========================================
         print("👨‍✈️  Creando pilotos...")
         pilotos = [
-            Piloto(nombre='Carlos Ramírez González', licencia='LIC-001', tipo_licencia='ATPL', horas_vuelo=8500, nacionalidad='Mexicana'),
-            Piloto(nombre='María López Hernández', licencia='LIC-002', tipo_licencia='CPL', horas_vuelo=4200, nacionalidad='Mexicana'),
-            Piloto(nombre='Roberto Silva Martínez', licencia='LIC-003', tipo_licencia='ATPL', horas_vuelo=12000, nacionalidad='Mexicana'),
-            Piloto(nombre='Ana García Torres', licencia='LIC-004', tipo_licencia='CPL', horas_vuelo=6800, nacionalidad='Mexicana'),
-            Piloto(nombre='Miguel Ángel Cruz', licencia='LIC-005', tipo_licencia='ATPL', horas_vuelo=9500, nacionalidad='Mexicana')
+            Piloto(nombre='Kassim Assad Mosri Rodríguez', licencia='LIC-001', tipo_licencia='RPAS', horas_vuelo=56000, nacionalidad='Mexicana'),
+            Piloto(nombre='Tomás Rolón Meráz', licencia='LIC-002', tipo_licencia='SPL', horas_vuelo=3300, nacionalidad='Mexicana'),
+            Piloto(nombre='Miguel Estrada García', licencia='LIC-003', tipo_licencia='ATPL', horas_vuelo=85000, nacionalidad='Mexicana'),
+            Piloto(nombre='Carlos Ramírez González', licencia='LIC-004', tipo_licencia='ATPL', horas_vuelo=8500, nacionalidad='Mexicana'),
+            Piloto(nombre='María López Hernández', licencia='LIC-005', tipo_licencia='CPL', horas_vuelo=4200, nacionalidad='Mexicana'),
+            Piloto(nombre='Roberto Silva Martínez', licencia='LIC-006', tipo_licencia='ATPL', horas_vuelo=12000, nacionalidad='Mexicana'),
+            Piloto(nombre='Ana García Torres', licencia='LIC-007', tipo_licencia='CPL', horas_vuelo=6800, nacionalidad='Mexicana'),
+            Piloto(nombre='Miguel Ángel Cruz', licencia='LIC-008', tipo_licencia='ATPL', horas_vuelo=9500, nacionalidad='Mexicana')
         ]
         db.session.add_all(pilotos)
         db.session.commit()
