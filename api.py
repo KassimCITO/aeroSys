@@ -153,7 +153,8 @@ def piloto_item(id):
         p.nacionalidad = data.get('nacionalidad', p.nacionalidad)
         db.session.commit()
         return jsonify({'msg':'updated'})
-    db.session.delete(p); db.session.commit()
+    db.session.delete(p);
+    db.session.commit()
     return jsonify({'msg':'deleted'})
 
 # Vuelos with filters
@@ -265,7 +266,8 @@ def vuelo_item(id):
             v.observaciones = data.get('observaciones')
         db.session.commit()
         return jsonify({'msg':'updated'})
-    db.session.delete(v); db.session.commit()
+    db.session.delete(v);
+    db.session.commit()
     return jsonify({'msg':'deleted'})
 
 # Confirmaciones
