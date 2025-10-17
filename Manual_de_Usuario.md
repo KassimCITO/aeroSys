@@ -21,10 +21,10 @@ El Sistema de Gestión de Aeropuertos es una aplicación web desarrollada en Fla
 ### Características Principales
 - **Dashboard intuitivo** con estadísticas en tiempo real
 - **Gestión completa de aeronaves** con imágenes
-- **Administración de pilotos** con información detallada
+- **Administración de pilotos** con información detallada e imágenes de perfil
 - **Control de vuelos** con asignación de aeronaves y pilotos
 - **Gestión de pasajeros** por vuelo con lista detallada
-- **Sistema de confirmaciones** para seguimiento de vuelos
+- **Sistema de confirmaciones** para seguimiento de vuelos con imágenes de evidencia
 - **Gestión de usuarios** con diferentes roles
 - **Gestión multi-aeropuerto** con cambio dinámico
 - **Reportes en PDF y Excel** con filtros avanzados
@@ -279,6 +279,7 @@ El dashboard es la pantalla principal del sistema y muestra:
    - **Tipo de Licencia:** ATPL, CPL, PPL, etc.
    - **Horas de Vuelo:** Experiencia del piloto
    - **Nacionalidad:** País de origen
+   - **Imagen:** Foto de perfil del piloto (opcional)
 4. Haz clic en "Guardar"
 
 ### Editar Piloto
@@ -373,11 +374,12 @@ El formulario de vuelos incluye botones "+" junto a los campos de Aeronave y Pil
 2. Selecciona el vuelo
 3. Establece el estado
 4. Agrega notas si es necesario
-5. Haz clic en "Guardar"
+5. Adjunta una imagen de evidencia (opcional)
+6. Haz clic en "Guardar"
 
 ### Editar Confirmación
 1. Haz clic en "Editar" junto a la confirmación
-2. Modifica el estado o las notas
+2. Modifica el estado, las notas o la imagen de evidencia
 3. Haz clic en "Actualizar"
 
 ## Gestión de Usuarios

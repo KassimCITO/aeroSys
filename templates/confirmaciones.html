@@ -106,6 +106,19 @@
                 </div>
             </div>
             
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label">Imagen de Evidencia</label>
+                        <input type="file" id="imagen" class="form-control" accept="image/*">
+                        <small class="form-text text-muted">Adjunte una imagen como evidencia de la confirmación (opcional)</small>
+                        <div id="imagen_preview" class="mt-2" style="display:none;">
+                            <img id="imagen_preview_img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px;" class="img-thumbnail">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-success" onclick="saveConfirmacion()">Guardar</button>
                 <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
@@ -121,6 +134,7 @@
                     <th>Vuelo</th>
                     <th>Estátus</th>
                     <th>Observaciones</th>
+                    <th>Evidencia</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -212,10 +226,15 @@ function fetchConfirmaciones() {
                 var tr = document.createElement('tr');
                 var vuelo = vuelos.find(function(v) { return v.id_vuelo === r.id_vuelo; });
                 
+                var imagenHtml = r.imagen ? 
+                    '<a href="/static/uploads/' + r.imagen + '" target="_blank"><img src="/static/uploads/' + r.imagen + '" alt="Evidencia" style="width: 40px; height: 40px; object-fit: cover;" class="rounded"></a>' : 
+                    '<i class="fas fa-image text-muted"></i>';
+                
                 tr.innerHTML = '<td>' + r.confirmacion_id + '</td>' +
                               '<td>' + (vuelo ? vuelo.codigo_vuelo + ' - ' + vuelo.origen + ' a ' + vuelo.destino : 'N/A') + '</td>' +
                               '<td><span class="badge bg-' + getEstadoColor(r.estado) + '">' + r.estado + '</span></td>' +
                               '<td>' + (r.notas || '-') + '</td>' +
+                              '<td>' + imagenHtml + '</td>' +
                               '<td>' +
                               '<button class="btn btn-sm btn-warning" onclick="editC(' + r.confirmacion_id + ')"><i class="fas fa-edit"></i></button> ' +
                               '<button class="btn btn-sm btn-danger" onclick="delC(' + r.confirmacion_id + ')"><i class="fas fa-trash"></i></button>' +
@@ -240,16 +259,19 @@ function getEstadoColor(estado) {
 function saveConfirmacion() {
     if (!validateForm()) return;
 
-    var payload = {
-        vuelo_id: parseInt(document.getElementById('id_vuelo').value),
-        estado: document.getElementById('estado').value,
-        notas: document.getElementById('notas').value || ''
-    };
+    var formData = new FormData();
+    formData.append('vuelo_id', document.getElementById('id_vuelo').value);
+    formData.append('estado', document.getElementById('estado').value);
+    formData.append('notas', document.getElementById('notas').value || '');
+    
+    var imagenFile = document.getElementById('imagen').files[0];
+    if (imagenFile) {
+        formData.append('imagen', imagenFile);
+    }
     
     fetch('/api/confirmaciones', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
+        body: formData
     })
     .then(function(response) {
         if (!response.ok) throw new Error('Error al guardar la confirmación');
@@ -273,21 +295,32 @@ function editC(id) {
             document.getElementById('estado').value = data.estado || 'Pendiente';
             document.getElementById('notas').value = data.notas || '';
             
+            // Mostrar imagen actual si existe
+            if (data.imagen) {
+                document.getElementById('imagen_preview').style.display = 'block';
+                document.getElementById('imagen_preview_img').src = '/static/uploads/' + data.imagen;
+            } else {
+                document.getElementById('imagen_preview').style.display = 'none';
+            }
+            
             showFormWithTransition('formArea', 'Editar Confirmación (ID ' + id + ')');
             
             document.querySelector('#formArea button.btn-success').onclick = function() {
                 if (!validateForm()) return;
                 
-                var payload = {
-                    vuelo_id: parseInt(document.getElementById('id_vuelo').value),
-                    estado: document.getElementById('estado').value,
-                    notas: document.getElementById('notas').value || ''
-                };
+                var formData = new FormData();
+                formData.append('vuelo_id', document.getElementById('id_vuelo').value);
+                formData.append('estado', document.getElementById('estado').value);
+                formData.append('notas', document.getElementById('notas').value || '');
+                
+                var imagenFile = document.getElementById('imagen').files[0];
+                if (imagenFile) {
+                    formData.append('imagen', imagenFile);
+                }
                 
                 fetch('/api/confirmaciones/' + id, {
                     method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                    body: formData
                 })
                 .then(function(response) {
                     if (!response.ok) throw new Error('Error al actualizar la confirmación');

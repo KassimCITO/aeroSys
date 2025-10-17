@@ -118,19 +118,60 @@ def pilotos():
             'licencia': p.licencia,
             'tipo_licencia': p.tipo_licencia,
             'horas_vuelo': p.horas_vuelo,
-            'nacionalidad': p.nacionalidad
+            'nacionalidad': p.nacionalidad,
+            'imagen': p.imagen
         } for p in items])
-    data = request.json or {}
-    p = Piloto(
-        nombre=data.get('nombre'),
-        licencia=data.get('licencia'),
-        tipo_licencia=data.get('tipo_licencia'),
-        horas_vuelo=data.get('horas_vuelo', 0),
-        nacionalidad=data.get('nacionalidad')
-    )
-    db.session.add(p)
-    db.session.commit()
-    return jsonify({'msg':'ok','id':p.piloto_id}),201
+    # Accept both JSON and FormData
+    try:
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        if request.is_json:
+            data = request.json or {}
+            files = None
+        else:
+            data = request.form.to_dict()
+            files = request.files
+
+        nombre = (data.get('nombre') or '').strip()
+        licencia = (data.get('licencia') or '').strip()
+        if not nombre or not licencia:
+            return jsonify({'msg': '❌ Error: El nombre y la licencia son campos obligatorios'}), 400
+
+        horas_vuelo_val = None
+        raw_horas = data.get('horas_vuelo')
+        if raw_horas not in (None, '', '0'):
+            try:
+                horas_vuelo_val = int(raw_horas)
+            except (TypeError, ValueError):
+                return jsonify({'msg': '❌ Error: Las horas de vuelo deben ser un número válido'}), 400
+
+        imagen_filename = None
+        if files and 'imagen' in files and files['imagen']:
+            file = files['imagen']
+            if file.filename:
+                filename = secure_filename(file.filename)
+                imagen_filename = filename
+                file.save(os.path.join(upload_folder, filename))
+
+        p = Piloto(
+            nombre=nombre,
+            licencia=licencia,
+            tipo_licencia=(data.get('tipo_licencia') or None),
+            horas_vuelo=horas_vuelo_val,
+            nacionalidad=(data.get('nacionalidad') or None),
+            imagen=imagen_filename
+        )
+        db.session.add(p)
+        db.session.commit()
+        return jsonify({'msg':'ok','id':p.piloto_id}),201
+    except Exception as e:
+        db.session.rollback()
+        try:
+            err = str(e)
+        except Exception:
+            err = 'error'
+        return jsonify({'msg': f'error al guardar: {err}'}), 500
 
 @api_bp.route('/pilotos/<int:id>', methods=['GET','PUT','DELETE'])
 def piloto_item(id):
@@ -142,15 +183,31 @@ def piloto_item(id):
             'licencia': p.licencia,
             'tipo_licencia': p.tipo_licencia,
             'horas_vuelo': p.horas_vuelo,
-            'nacionalidad': p.nacionalidad
+            'nacionalidad': p.nacionalidad,
+            'imagen': p.imagen
         })
     if request.method == 'PUT':
-        data = request.json or {}
+        # Accept both JSON and FormData
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        if request.is_json:
+            data = request.json or {}
+            files = None
+        else:
+            data = request.form.to_dict()
+            files = request.files
+        
         p.nombre = data.get('nombre', p.nombre)
         p.licencia = data.get('licencia', p.licencia)
-        p.horas_vuelo = data.get('horas_vuelo', p.horas_vuelo)
+        if data.get('horas_vuelo'):
+            p.horas_vuelo = int(data.get('horas_vuelo'))
         p.tipo_licencia = data.get('tipo_licencia', p.tipo_licencia)
         p.nacionalidad = data.get('nacionalidad', p.nacionalidad)
+        if files and 'imagen' in files and files['imagen'] and files['imagen'].filename:
+            file = files['imagen']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(upload_folder, filename))
+            p.imagen = filename
         db.session.commit()
         return jsonify({'msg':'updated'})
     db.session.delete(p);
@@ -276,16 +333,48 @@ def vuelo_item(id):
 def confirmaciones():
     if request.method == 'GET':
         items = Confirmacion.query.all()
-        return jsonify([{'confirmacion_id': c.confirmacion_id,'vuelo_id': c.vuelo_id,'estado': c.estado,'notas': c.notas} for c in items])
-    data = request.json or {}
+        return jsonify([{'confirmacion_id': c.confirmacion_id,'vuelo_id': c.vuelo_id,'estado': c.estado,'notas': c.notas,'imagen': c.imagen} for c in items])
     
     # Verificar permisos: solo operadores autorizados (no piloto ni invitado)
     if current_user.rol in ['piloto', 'invitado']:
         return jsonify({'msg':'🚫 Acceso Denegado: Solo operadores autorizados pueden confirmar vuelos'}), 403
     
-    c = Confirmacion(vuelo_id=data.get('vuelo_id'), estado=data.get('estado','Pendiente'), notas=data.get('notas'))
-    db.session.add(c); db.session.commit()
-    return jsonify({'msg':'ok','id':c.confirmacion_id}),201
+    # Accept both JSON and FormData
+    try:
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        if request.is_json:
+            data = request.json or {}
+            files = None
+        else:
+            data = request.form.to_dict()
+            files = request.files
+
+        imagen_filename = None
+        if files and 'imagen' in files and files['imagen']:
+            file = files['imagen']
+            if file.filename:
+                filename = secure_filename(file.filename)
+                imagen_filename = filename
+                file.save(os.path.join(upload_folder, filename))
+
+        c = Confirmacion(
+            vuelo_id=data.get('vuelo_id'), 
+            estado=data.get('estado','Pendiente'), 
+            notas=data.get('notas'),
+            imagen=imagen_filename
+        )
+        db.session.add(c)
+        db.session.commit()
+        return jsonify({'msg':'ok','id':c.confirmacion_id}),201
+    except Exception as e:
+        db.session.rollback()
+        try:
+            err = str(e)
+        except Exception:
+            err = 'error'
+        return jsonify({'msg': f'error al guardar: {err}'}), 500
 
 @api_bp.route('/confirmaciones/<int:id>', methods=['GET','PUT','DELETE'])
 @login_required
@@ -297,6 +386,7 @@ def confirmacion_item(id):
             'vuelo_id': c.vuelo_id,
             'estado': c.estado,
             'notas': c.notas,
+            'imagen': c.imagen,
             'created_at': c.created_at.isoformat() if c.created_at else None
         })
     if request.method == 'PUT':
@@ -304,9 +394,23 @@ def confirmacion_item(id):
         if current_user.rol in ['piloto', 'invitado']:
             return jsonify({'msg':'🚫 Acceso Denegado: Solo operadores autorizados pueden modificar confirmaciones'}), 403
         
-        data = request.json or {}
+        # Accept both JSON and FormData
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        if request.is_json:
+            data = request.json or {}
+            files = None
+        else:
+            data = request.form.to_dict()
+            files = request.files
+        
         c.estado = data.get('estado', c.estado)
         c.notas = data.get('notas', c.notas)
+        if files and 'imagen' in files and files['imagen'] and files['imagen'].filename:
+            file = files['imagen']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(upload_folder, filename))
+            c.imagen = filename
         db.session.commit()
         return jsonify({'msg':'updated'})
     

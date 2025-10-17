@@ -28,6 +28,7 @@ class Piloto(db.Model):
     tipo_licencia = db.Column(db.String(20))
     horas_vuelo = db.Column(db.Integer)
     nacionalidad = db.Column(db.String(50))
+    imagen = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Relaciones con vuelos
     vuelos_piloto = db.relationship('Vuelo', back_populates='piloto', foreign_keys='Vuelo.piloto_id')
@@ -64,6 +65,7 @@ class Confirmacion(db.Model):
     vuelo_id = db.Column(db.Integer, db.ForeignKey('Vuelos.vuelo_id'), nullable=False)
     estado = db.Column(db.String(20), nullable=False)
     notas = db.Column(db.Text)
+    imagen = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Relación con vuelo
     vuelo = db.relationship('Vuelo', back_populates='confirmaciones')

@@ -551,11 +551,15 @@ function guardarConfirmacion() {
         return;
     }
     
-    var payload = {
-        vuelo_id: parseInt(vueloId),
-        estado: estado,
-        notas: notas
-    };
+    var formData = new FormData();
+    formData.append('vuelo_id', vueloId);
+    formData.append('estado', estado);
+    formData.append('notas', notas);
+    
+    var imagenFile = document.getElementById('imagen_confirmacion').files[0];
+    if (imagenFile) {
+        formData.append('imagen', imagenFile);
+    }
 
     // Si ya existe una confirmación, actualizarla; si no, crear una nueva
     var method = confirmacionId ? 'PUT' : 'POST';
@@ -563,11 +567,7 @@ function guardarConfirmacion() {
 
     fetch(url, {
         method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        body: formData
     })
     .then(response => {
         if (!response.ok) {
@@ -718,21 +718,21 @@ function guardarPilotoModal() {
         return;
     }
     
-    var payload = {
-        nombre: document.getElementById('modal_nombre').value.trim(),
-        licencia: document.getElementById('modal_licencia').value.trim(),
-        tipo_licencia: document.getElementById('modal_tipo_licencia').value,
-        horas_vuelo: parseInt(document.getElementById('modal_horas_vuelo').value) || 0,
-        nacionalidad: document.getElementById('modal_nacionalidad').value.trim()
-    };
+    var formData = new FormData();
+    formData.append('nombre', document.getElementById('modal_nombre').value.trim());
+    formData.append('licencia', document.getElementById('modal_licencia').value.trim());
+    formData.append('tipo_licencia', document.getElementById('modal_tipo_licencia').value);
+    formData.append('horas_vuelo', document.getElementById('modal_horas_vuelo').value || 0);
+    formData.append('nacionalidad', document.getElementById('modal_nacionalidad').value.trim());
+    
+    var imagenFile = document.getElementById('modal_imagen').files[0];
+    if (imagenFile) {
+        formData.append('imagen', imagenFile);
+    }
     
     fetch('/api/pilotos', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        body: formData
     })
     .then(function(response) {
         if (!response.ok) {
@@ -1181,6 +1181,12 @@ function hideFormWithTransition(formId) {
                         <input type="text" class="form-control" id="modal_nacionalidad" 
                                maxlength="50" placeholder="Ej: México" value="México">
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal_imagen" class="form-label">Imagen de Perfil</label>
+                        <input type="file" class="form-control" id="modal_imagen" accept="image/*">
+                        <small class="form-text text-muted">Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1231,6 +1237,12 @@ function hideFormWithTransition(formId) {
                         <label for="notas_confirmacion" class="form-label">Notas Adicionales</label>
                         <textarea class="form-control" id="notas_confirmacion" rows="3" 
                                 placeholder="Ingrese cualquier observación o nota adicional..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imagen_confirmacion" class="form-label">Imagen de Evidencia</label>
+                        <input type="file" class="form-control" id="imagen_confirmacion" accept="image/*">
+                        <small class="form-text text-muted">Adjunte una imagen como evidencia de la confirmación (opcional)</small>
                     </div>
                 </form>
             </div>

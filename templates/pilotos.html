@@ -86,6 +86,15 @@
                 <input id="nacionalidad" class="form-control" maxlength="50" placeholder="Ej: México" value="México">
             </div>
             
+            <div class="mb-3">
+                <label for="imagen" class="form-label">Imagen de Perfil</label>
+                <input type="file" id="imagen" class="form-control" accept="image/*">
+                <small class="form-text text-muted">Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+                <div id="imagen_preview" class="mt-2" style="display:none;">
+                    <img id="imagen_preview_img" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px;" class="img-thumbnail">
+                </div>
+            </div>
+            
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-success" onclick="savePiloto()">Guardar</button>
                 <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
@@ -98,6 +107,7 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
+                    <th>Imagen</th>
                     <th>Nombre</th>
                     <th>Licencia</th>
                     <th>Tipo</th>
@@ -191,7 +201,12 @@ function fetchPilotos() {
                 
                 data.forEach(function(r) {
                     var tr = document.createElement('tr');
+                    var imagenHtml = r.imagen ? 
+                        '<img src="/static/uploads/' + r.imagen + '" alt="Foto" style="width: 40px; height: 40px; object-fit: cover;" class="rounded-circle">' : 
+                        '<i class="fas fa-user-circle fa-2x text-secondary"></i>';
+                    
                     tr.innerHTML = '<td>' + r.piloto_id + '</td>' +
+                                  '<td>' + imagenHtml + '</td>' +
                                   '<td>' + r.nombre + '</td>' +
                                   '<td>' + r.licencia + '</td>' +
                                   '<td>' + (r.tipo_licencia || '-') + '</td>' +
@@ -218,23 +233,27 @@ function savePiloto() {
     if (!validateForm()) return;
 
     var piloto_id = document.getElementById('piloto_id').value;
-    var payload = {
-        nombre: document.getElementById('nombre').value,
-        licencia: document.getElementById('licencia').value,
-        tipo_licencia: document.getElementById('tipo_licencia').value,
-        horas_vuelo: parseInt(document.getElementById('horas_vuelo').value || 0),
-        nacionalidad: document.getElementById('nacionalidad').value
-    };
+    var formData = new FormData();
     
-    console.log('Saving piloto with payload:', payload);
+    formData.append('nombre', document.getElementById('nombre').value);
+    formData.append('licencia', document.getElementById('licencia').value);
+    formData.append('tipo_licencia', document.getElementById('tipo_licencia').value);
+    formData.append('horas_vuelo', document.getElementById('horas_vuelo').value || 0);
+    formData.append('nacionalidad', document.getElementById('nacionalidad').value);
+    
+    var imagenFile = document.getElementById('imagen').files[0];
+    if (imagenFile) {
+        formData.append('imagen', imagenFile);
+    }
+    
+    console.log('Saving piloto with FormData');
     
     var url = piloto_id ? '/api/pilotos/' + piloto_id : '/api/pilotos';
     var method = piloto_id ? 'PUT' : 'POST';
     
     fetch(url, {
         method: method,
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
+        body: formData
     })
     .then(function(response) {
         console.log('Save response status:', response.status);
@@ -269,6 +288,14 @@ function editP(id) {
             document.getElementById('tipo_licencia').value = data.tipo_licencia || 'PPL';
             document.getElementById('horas_vuelo').value = data.horas_vuelo || 0;
             document.getElementById('nacionalidad').value = data.nacionalidad || 'México';
+            
+            // Mostrar imagen actual si existe
+            if (data.imagen) {
+                document.getElementById('imagen_preview').style.display = 'block';
+                document.getElementById('imagen_preview_img').src = '/static/uploads/' + data.imagen;
+            } else {
+                document.getElementById('imagen_preview').style.display = 'none';
+            }
             
             showFormWithTransition('formArea', 'Editar Piloto (ID ' + id + ')');
             

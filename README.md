@@ -136,6 +136,7 @@ aeroSys/
 ### Gestión de Pilotos
 - CRUD completo de pilotos
 - Control de licencias y horas de vuelo
+- Soporte para imágenes de perfil
 - Filtros avanzados
 - Reportes detallados
 
@@ -149,6 +150,7 @@ aeroSys/
 ### Sistema de Confirmaciones
 - Confirmación de vuelos por operadores autorizados
 - Estados de confirmación (Confirmado, Pendiente, Cancelado)
+- Soporte para adjuntar imágenes de evidencia
 - Notas adicionales
 - Control de permisos por rol
 
